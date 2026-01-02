@@ -326,10 +326,10 @@ export default function UsersPage() {
                             <div className="flex items-center gap-2">
                               <p className="font-medium text-gray-900">{user.businessName || 'N/A'}</p>
                               {user.verified && (
-                                <Shield className="w-4 h-4 text-green-500" title="Verified Account" />
+                                <Shield className="w-4 h-4 text-green-500" />
                               )}
                               {user.suspended && (
-                                <XCircle className="w-4 h-4 text-red-500" title="Suspended Account" />
+                                <XCircle className="w-4 h-4 text-red-500" />
                               )}
                             </div>
                             <p className="text-sm text-gray-500">{user.entityType || 'Not specified'}</p>
