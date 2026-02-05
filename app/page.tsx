@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import {
   Users,
   FileText,
@@ -185,17 +186,20 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          </div>
         </div>
-      </div>
+      </ProtectedRoute>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
       <Navbar />
 
       {/* Page Header */}
@@ -388,5 +392,6 @@ export default function AdminDashboard() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   );
 }

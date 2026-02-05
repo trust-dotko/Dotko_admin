@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ArrowLeft, Search, Bell, AlertCircle, Info, CheckCircle2, Eye } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import DetailModal from '@/components/DetailModal';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface Notification {
   id: string;
@@ -103,8 +104,9 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
 
       {/* Page Header */}
       <header className="bg-white shadow-sm border-b border-gray-100">
@@ -270,6 +272,7 @@ export default function NotificationsPage() {
         title={`Notification Details: ${detailModal.notification?.title || ''}`}
         data={detailModal.notification || {}}
       />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

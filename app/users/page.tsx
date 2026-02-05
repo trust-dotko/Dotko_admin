@@ -9,6 +9,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import Toast from '@/components/Toast';
 import Navbar from '@/components/Navbar';
 import DetailModal from '@/components/DetailModal';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface User {
   id: string;
@@ -202,8 +203,9 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
 
       {/* Page Header */}
       <header className="bg-white shadow-sm border-b border-gray-100">
@@ -469,6 +471,7 @@ export default function UsersPage() {
         title={`User Details: ${detailModal.user?.businessName || ''}`}
         data={detailModal.user || {}}
       />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

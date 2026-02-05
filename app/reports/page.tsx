@@ -10,6 +10,7 @@ import InputModal from '@/components/InputModal';
 import Toast from '@/components/Toast';
 import Navbar from '@/components/Navbar';
 import DetailModal from '@/components/DetailModal';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface Report {
   id: string;
@@ -229,8 +230,9 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
 
       {/* Page Header */}
       <header className="bg-white shadow-sm border-b border-gray-100">
@@ -450,6 +452,7 @@ export default function ReportsPage() {
         title={`Report Details: ${detailModal.report?.customerName || ''}`}
         data={detailModal.report || {}}
       />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

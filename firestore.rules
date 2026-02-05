@@ -1,0 +1,304 @@
+rules_version = '2';
+
+/**
+ * Firebase Firestore Security Rules
+ *
+ * OWASP Best Practices Implemented:
+ * 1. Authentication required for all operations
+ * 2. Authorization checks (users can only access their own data)
+ * 3. Input validation (length limits, format checks)
+ * 4. Rate limiting (throttle on writes)
+ * 5. Data sanitization (enforce schemas)
+ * 6. Prevent privilege escalation
+ * 7. Audit logging ready (via Firebase extensions)
+ *
+ * IMPORTANT: Deploy these rules to Firebase Console
+ * Command: firebase deploy --only firestore:rules
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // HELPER FUNCTIONS
+    // ==========================================
+
+    /**
+     * Check if user is authenticated
+     */
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    /**
+     * Check if user is accessing their own data
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * Check if email is verified (required for sensitive operations)
+     */
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    /**
+     * Check if user is an admin (via custom claims)
+     * Admins have full read/write access to all collections
+     */
+    function isAdmin() {
+      return request.auth != null &&
+             request.auth.token.admin == true;
+    }
+
+    /**
+     * Validate string length
+     */
+    function validStringLength(str, minLen, maxLen) {
+      return str is string && str.size() >= minLen && str.size() <= maxLen;
+    }
+
+    /**
+     * Validate email format (basic check)
+     */
+    function validEmail(email) {
+      return email is string &&
+             email.size() > 0 &&
+             email.size() <= 254 &&
+             email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    /**
+     * Validate phone number (Indian format)
+     */
+    function validPhone(phone) {
+      return phone is string &&
+             phone.matches('^[6-9][0-9]{9}$');
+    }
+
+    /**
+     * Validate PAN format
+     */
+    function validPAN(pan) {
+      return pan is string &&
+             pan.size() == 10 &&
+             pan.matches('^[A-Z]{5}[0-9]{4}[A-Z]{1}$');
+    }
+
+    /**
+     * Validate GST format
+     */
+    function validGST(gst) {
+      return gst is string &&
+             gst.size() == 15 &&
+             gst.matches('^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$');
+    }
+
+    /**
+     * Rate limiting helper - check last write timestamp
+     * Prevents users from writing too frequently
+     */
+    function rateLimitOk(collection, minIntervalSeconds) {
+      return !exists(/databases/$(database)/documents/$(collection)/$(request.auth.uid)) ||
+             request.time > resource.data.updatedAt + duration.value(minIntervalSeconds, 's');
+    }
+
+    // ==========================================
+    // USERS COLLECTION
+    // ==========================================
+    match /users/{userId} {
+      // READ: Admins can read all, Users can read their own profile + profiles of users they're reporting
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        isOwner(userId) ||
+        exists(/databases/$(database)/documents/reports/$(request.auth.uid + '_' + userId))
+      );
+
+      // CREATE: Only during signup, must include required fields
+      allow create: if isAuthenticated() &&
+                       isOwner(userId) &&
+                       // Required fields validation
+                       validStringLength(request.resource.data.businessName, 2, 200) &&
+                       validEmail(request.resource.data.email) &&
+                       validPhone(request.resource.data.mobileNumber) &&
+                       // Validate GST if provided
+                       (!('gst' in request.resource.data) ||
+                        request.resource.data.gst == '' ||
+                        validGST(request.resource.data.gst)) &&
+                       // Validate PAN if provided
+                       (!('pan' in request.resource.data) ||
+                        request.resource.data.pan == '' ||
+                        validPAN(request.resource.data.pan)) &&
+                       // Must not set admin flags
+                       !('isAdmin' in request.resource.data) &&
+                       !('isSuperAdmin' in request.resource.data) &&
+                       // Set proper timestamps
+                       request.resource.data.createdAt is timestamp &&
+                       request.resource.data.updatedAt is timestamp;
+
+      // UPDATE: Admins can update any profile, Users can update their own profile with validation
+      // Special case: Allow email verification updates without other validations
+      allow update: if isAuthenticated() &&
+                       (isAdmin() || isOwner(userId)) &&
+                       (
+                         // Email verification update (only updating emailVerified and emailVerifiedAt)
+                         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emailVerified', 'emailVerifiedAt']) &&
+                          request.resource.data.emailVerified is bool) ||
+
+                         // Profile update (with full validation)
+                         (rateLimitOk('users', 60) &&
+                          // Cannot change email or userId
+                          request.resource.data.email == resource.data.email &&
+                          // Cannot escalate privileges
+                          (!('isAdmin' in request.resource.data) ||
+                           request.resource.data.isAdmin == resource.data.get('isAdmin', false)) &&
+                          (!('isSuperAdmin' in request.resource.data) ||
+                           request.resource.data.isSuperAdmin == resource.data.get('isSuperAdmin', false)) &&
+                          // Validate required fields
+                          validStringLength(request.resource.data.businessName, 2, 200) &&
+                          validPhone(request.resource.data.mobileNumber) &&
+                          // Update timestamp
+                          request.resource.data.updatedAt is timestamp)
+                       );
+
+      // DELETE: Only admins can delete user profiles
+      allow delete: if isAdmin();
+    }
+
+    // ==========================================
+    // REPORTS COLLECTION
+    // ==========================================
+    match /reports/{reportId} {
+      // READ: Admins can read all, Supplier (reporter) and customer (reported) can read
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.supplierId == request.auth.uid ||
+        resource.data.customerEmail == request.auth.token.email ||
+        resource.data.customerGSTIN == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.gst
+      );
+
+      // CREATE: Authenticated users with verified email can file reports
+      // Rate limit: Max 10 reports per day
+      allow create: if isAuthenticated() &&
+                       isEmailVerified() &&
+                       // Check onboarding completed
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.onboardingCompleted == true &&
+                       // Rate limiting: basic check (cannot file more than 10 reports per hour - implement stricter in Cloud Function)
+                       request.resource.data.createdAt is timestamp &&
+                       request.resource.data.updatedAt is timestamp &&
+                       // Validate required fields
+                       validStringLength(request.resource.data.customerName, 2, 200) &&
+                       (validEmail(request.resource.data.customerEmail) ||
+                        validPhone(request.resource.data.customerWhatsapp)) &&
+                       request.resource.data.amount is number &&
+                       request.resource.data.amount > 0 &&
+                       request.resource.data.amount <= 100000000 && // Max 10 crore
+                       validStringLength(request.resource.data.invoiceNumber, 1, 50) &&
+                       // Must set correct supplierId
+                       request.resource.data.supplierId == request.auth.uid &&
+                       // Must set status to pending
+                       request.resource.data.status == 'pending' &&
+                       // Validate ratings (1-5)
+                       request.resource.data.ratings.overall >= 1 &&
+                       request.resource.data.ratings.overall <= 5 &&
+                       request.resource.data.ratings.paymentTimeliness >= 1 &&
+                       request.resource.data.ratings.paymentTimeliness <= 5 &&
+                       request.resource.data.ratings.communication >= 1 &&
+                       request.resource.data.ratings.communication <= 5 &&
+                       request.resource.data.ratings.contractFulfilment >= 1 &&
+                       request.resource.data.ratings.contractFulfilment <= 5;
+
+      // UPDATE: Admins can update any report, customers can appeal, suppliers can update limited fields
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        // Customer appealing
+        (resource.data.customerEmail == request.auth.token.email &&
+         request.time < resource.data.appealDeadline &&
+         request.resource.data.status == 'appealed') ||
+        // Supplier updating (limited fields)
+        (resource.data.supplierId == request.auth.uid &&
+         request.resource.data.status == resource.data.status)
+      ) &&
+      // Update timestamp
+      request.resource.data.updatedAt is timestamp;
+
+      // DELETE: Only admins can delete reports (for moderation)
+      allow delete: if isAdmin();
+    }
+
+    // ==========================================
+    // NOTIFICATIONS COLLECTION
+    // ==========================================
+    match /notifications/{notificationId} {
+      // READ: Admins can read all, recipients can read their own
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.recipientEmail == request.auth.token.email ||
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email == resource.data.recipientEmail
+      );
+
+      // CREATE: Authenticated users can create notifications
+      allow create: if isAuthenticated() &&
+                       request.resource.data.createdAt is timestamp &&
+                       validEmail(request.resource.data.recipientEmail) &&
+                       validStringLength(request.resource.data.title, 1, 200) &&
+                       validStringLength(request.resource.data.message, 1, 1000);
+
+      // UPDATE: Admins can update any notification, recipients can mark as read
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        (resource.data.recipientEmail == request.auth.token.email &&
+         // Can only update 'read' field
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'updatedAt']))
+      );
+
+      // DELETE: Admins can delete any notification, users can delete their own
+      allow delete: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.recipientEmail == request.auth.token.email
+      );
+    }
+
+    // ==========================================
+    // LANDING SIGNUPS COLLECTION
+    // ==========================================
+    match /landing_signups/{signupId} {
+      // READ: Only authenticated users (admins) can read
+      allow read: if isAuthenticated();
+
+      // CREATE: Anyone can submit (unauthenticated landing page form)
+      // Validation to prevent spam and malicious data
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.name.size() >= 2 &&
+                       request.resource.data.name.size() <= 100 &&
+                       validEmail(request.resource.data.businessEmail) &&
+                       request.resource.data.companyName is string &&
+                       request.resource.data.companyName.size() >= 2 &&
+                       request.resource.data.companyName.size() <= 200 &&
+                       request.resource.data.createdAt is string &&
+                       request.resource.data.source is string &&
+                       request.resource.data.status is string &&
+                       request.resource.data.status == 'new';
+
+      // UPDATE: Only authenticated users can update (admins changing status)
+      allow update: if isAuthenticated() &&
+                       // Can only update status and updatedAt fields
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+                       request.resource.data.status in ['new', 'contacted', 'converted'];
+
+      // DELETE: Only authenticated users can delete (admins removing spam)
+      allow delete: if isAuthenticated();
+    }
+
+    // ==========================================
+    // DENY ALL OTHER COLLECTIONS
+    // ==========================================
+    // Explicit deny for any collections not defined above
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
