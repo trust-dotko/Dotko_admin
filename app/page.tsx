@@ -5,36 +5,40 @@ import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { Users, FileText, Bell, TrendingUp, Clock, CheckCircle, Shield, BarChart3, PieChart as PieChartIcon, UserPlus } from 'lucide-react';
 import {
-  Users,
-  FileText,
-  AlertTriangle,
-  Bell,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Shield,
-  BarChart3,
-  PieChart as PieChartIcon
-} from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
 import Navbar from '@/components/Navbar';
 
 interface Stats {
   totalUsers: number;
+  verifiedUsers: number;
   totalReports: number;
   pendingReports: number;
   resolvedReports: number;
-  totalNotifications: number;
-  verifiedUsers: number;
   publishedReports: number;
   rejectedReports: number;
+  totalNotifications: number;
+  unreadNotifications: number;
+  totalLeads: number;
+  leadsToday: number;
+  leadsThisWeek: number;
+  totalFcmTokens: number;
 }
 
 interface RecentActivity {
   id: string;
-  type: 'user' | 'report' | 'notification';
+  type: 'user' | 'report' | 'notification' | 'lead';
   message: string;
   timestamp: string;
 }
@@ -45,17 +49,39 @@ interface ChartData {
   color: string;
 }
 
+const defaultStats: Stats = {
+  totalUsers: 0,
+  verifiedUsers: 0,
+  totalReports: 0,
+  pendingReports: 0,
+  resolvedReports: 0,
+  publishedReports: 0,
+  rejectedReports: 0,
+  totalNotifications: 0,
+  unreadNotifications: 0,
+  totalLeads: 0,
+  leadsToday: 0,
+  leadsThisWeek: 0,
+  totalFcmTokens: 0,
+};
+
+function toDate(value: any): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value?.toDate === 'function') return value.toDate();
+  if (typeof value?.seconds === 'number') return new Date(value.seconds * 1000);
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function toIso(value: any): string {
+  const date = toDate(value);
+  return date ? date.toISOString() : new Date(0).toISOString();
+}
+
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>({
-    totalUsers: 0,
-    totalReports: 0,
-    pendingReports: 0,
-    resolvedReports: 0,
-    totalNotifications: 0,
-    verifiedUsers: 0,
-    publishedReports: 0,
-    rejectedReports: 0,
-  });
+  const [stats, setStats] = useState<Stats>(defaultStats);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [reportStatusData, setReportStatusData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,99 +94,113 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
 
-      // Fetch users
-      const usersSnapshot = await getDocs(collection(db, 'users'));
-      const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const totalUsers = users.length;
-      const verifiedUsers = users.filter((u: any) => u.verified).length;
+      const [usersSnapshot, reportsSnapshot, notificationsSnapshot, leadsSnapshot, tokensSnapshot] = await Promise.all([
+        getDocs(collection(db, 'users')),
+        getDocs(collection(db, 'reports')),
+        getDocs(collection(db, 'notifications')),
+        getDocs(collection(db, 'landing_signups')),
+        getDocs(collection(db, 'fcm_tokens')),
+      ]);
 
-      // Fetch reports
-      const reportsSnapshot = await getDocs(collection(db, 'reports'));
-      const reports = reportsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const users = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const reports = reportsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const notifications = notificationsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const leads = leadsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfWeek = new Date(startOfToday);
+      startOfWeek.setDate(startOfWeek.getDate() - 6);
+
+      const totalUsers = users.length;
+      const verifiedUsers = users.filter((u: any) => Boolean(u.verified)).length;
 
       const totalReports = reports.length;
-      const pendingReports = reports.filter((r: any) =>
-        r.status === 'pending' || r.status === 'under_discussion'
-      ).length;
-      const resolvedReports = reports.filter((r: any) =>
-        r.status === 'resolved'
-      ).length;
-      const publishedReports = reports.filter((r: any) =>
-        r.status === 'published'
-      ).length;
-      const rejectedReports = reports.filter((r: any) =>
-        r.status === 'rejected'
-      ).length;
+      const pendingReports = reports.filter((r: any) => r.status === 'pending' || r.status === 'under_discussion').length;
+      const resolvedReports = reports.filter((r: any) => r.status === 'resolved').length;
+      const publishedReports = reports.filter((r: any) => r.status === 'published').length;
+      const rejectedReports = reports.filter((r: any) => r.status === 'rejected').length;
 
-      // Fetch notifications
-      const notificationsSnapshot = await getDocs(collection(db, 'notifications'));
-      const totalNotifications = notificationsSnapshot.size;
+      const totalNotifications = notifications.length;
+      const unreadNotifications = notifications.filter((n: any) => !n.read).length;
+
+      const totalLeads = leads.length;
+      const leadsToday = leads.filter((lead: any) => {
+        const createdAt = toDate(lead.createdAt);
+        return createdAt ? createdAt >= startOfToday : false;
+      }).length;
+      const leadsThisWeek = leads.filter((lead: any) => {
+        const createdAt = toDate(lead.createdAt);
+        return createdAt ? createdAt >= startOfWeek : false;
+      }).length;
+
+      const totalFcmTokens = tokensSnapshot.size;
 
       setStats({
         totalUsers,
+        verifiedUsers,
         totalReports,
         pendingReports,
         resolvedReports,
-        totalNotifications,
-        verifiedUsers,
         publishedReports,
         rejectedReports,
+        totalNotifications,
+        unreadNotifications,
+        totalLeads,
+        leadsToday,
+        leadsThisWeek,
+        totalFcmTokens,
       });
 
-      // Prepare chart data
-      const statusData: ChartData[] = [
-        { name: 'Pending', value: pendingReports, color: '#F59E0B' },
-        { name: 'Resolved', value: resolvedReports, color: '#22C55E' },
-        { name: 'Published', value: publishedReports, color: '#EF4444' },
-        { name: 'Rejected', value: rejectedReports, color: '#6B7280' },
-      ].filter(item => item.value > 0);
+      setReportStatusData(
+        [
+          { name: 'Pending', value: pendingReports, color: '#f59e0b' },
+          { name: 'Resolved', value: resolvedReports, color: '#16a34a' },
+          { name: 'Published', value: publishedReports, color: '#dc2626' },
+          { name: 'Rejected', value: rejectedReports, color: '#64748b' },
+        ].filter((item) => item.value > 0)
+      );
 
-      setReportStatusData(statusData);
-
-      // Build recent activity
       const activities: RecentActivity[] = [];
 
-      // Recent users
-      const recentUsersQuery = query(
-        collection(db, 'users'),
-        orderBy('createdAt', 'desc'),
-        limit(5)
-      );
-      const recentUsers = await getDocs(recentUsersQuery);
-      recentUsers.forEach(doc => {
-        const data = doc.data();
+      const [recentUsers, recentReports, recentLeads] = await Promise.all([
+        getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(4))),
+        getDocs(query(collection(db, 'reports'), orderBy('createdAt', 'desc'), limit(4))),
+        getDocs(query(collection(db, 'landing_signups'), orderBy('createdAt', 'desc'), limit(4))),
+      ]);
+
+      recentUsers.forEach((doc) => {
+        const data = doc.data() as any;
         activities.push({
           id: doc.id,
           type: 'user',
-          message: `New user registered: ${data.businessName}`,
-          timestamp: data.createdAt || new Date().toISOString(),
+          message: `User registered: ${data.businessName || data.email || 'Unknown'}`,
+          timestamp: toIso(data.createdAt),
         });
       });
 
-      // Recent reports
-      const recentReportsQuery = query(
-        collection(db, 'reports'),
-        orderBy('createdAt', 'desc'),
-        limit(5)
-      );
-      const recentReportsSnap = await getDocs(recentReportsQuery);
-      recentReportsSnap.forEach(doc => {
-        const data = doc.data();
+      recentReports.forEach((doc) => {
+        const data = doc.data() as any;
         activities.push({
           id: doc.id,
           type: 'report',
-          message: `Report filed: ${data.customerName} - ₹${data.amount?.toLocaleString('en-IN')}`,
-          timestamp: data.createdAt || new Date().toISOString(),
+          message: `Report filed by ${data.customerName || 'Unknown'}`,
+          timestamp: toIso(data.createdAt),
         });
       });
 
-      // Sort by timestamp
-      activities.sort((a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
+      recentLeads.forEach((doc) => {
+        const data = doc.data() as any;
+        activities.push({
+          id: doc.id,
+          type: 'lead',
+          message: `Website lead: ${data.name || data.fullName || data.email || 'Unknown'}`,
+          timestamp: toIso(data.createdAt),
+        });
+      });
 
-      setRecentActivity(activities.slice(0, 10));
-
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setRecentActivity(activities.slice(0, 12));
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -168,29 +208,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, color, link }: any) => (
-    <Link href={link}>
-      <div className={`bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow border-l-4 ${color} cursor-pointer`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-gray-600 text-sm font-medium">{title}</p>
-            <p className="text-3xl font-bold mt-2">{value}</p>
-          </div>
-          <div className={`p-3 rounded-full ${color.replace('border-', 'bg-').replace('-500', '-100')}`}>
-            <Icon className={`w-8 h-8 ${color.replace('border-', 'text-')}`} />
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="admin-page flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading dashboard...</p>
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-slate-700"></div>
+            <p className="mt-4 text-slate-600">Loading dashboard...</p>
           </div>
         </div>
       </ProtectedRoute>
@@ -199,199 +223,178 @@ export default function AdminDashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <div className="admin-page">
+        <Navbar />
 
-      {/* Page Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-1">Overview of your DOTKO.IN platform</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600 bg-gray-100 px-4 py-2 rounded-lg">
+        <header className="admin-header">
+          <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-semibold text-slate-900">Dashboard</h1>
+                <p className="mt-1 text-slate-600">Operational and website funnel overview</p>
+              </div>
+              <span className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
                 {new Date().toLocaleDateString('en-IN', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
-                  day: 'numeric'
+                  day: 'numeric',
                 })}
               </span>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <StatCard
-            title="Total Users"
-            value={stats.totalUsers}
-            icon={Users}
-            color="border-blue-500"
-            link="/users"
-          />
-          <StatCard
-            title="Verified Users"
-            value={stats.verifiedUsers}
-            icon={Shield}
-            color="border-green-500"
-            link="/users"
-          />
-          <StatCard
-            title="Total Reports"
-            value={stats.totalReports}
-            icon={FileText}
-            color="border-purple-500"
-            link="/reports"
-          />
-          <StatCard
-            title="Pending Reports"
-            value={stats.pendingReports}
-            icon={Clock}
-            color="border-orange-500"
-            link="/reports"
-          />
-          <StatCard
-            title="Resolved Reports"
-            value={stats.resolvedReports}
-            icon={CheckCircle}
-            color="border-teal-500"
-            link="/reports"
-          />
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Report Status Distribution */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Report Status Distribution</h2>
-              <PieChartIcon className="w-6 h-6 text-gray-400" />
-            </div>
-            {reportStatusData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={reportStatusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {reportStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
-                No report data available
+        <main className="admin-main space-y-8">
+          <section>
+            <div className="admin-panel p-4">
+              <h2 className="mb-3 text-base font-semibold text-slate-800">User & Report Data</h2>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <CompactStat title="Total Users" value={stats.totalUsers} link="/users" />
+                <CompactStat title="Verified Users" value={stats.verifiedUsers} link="/users" />
+                <CompactStat title="Total Reports" value={stats.totalReports} link="/reports" />
+                <CompactStat title="Pending Reports" value={stats.pendingReports} link="/reports" />
+                <CompactStat title="Resolved Reports" value={stats.resolvedReports} link="/reports" />
+                <CompactStat title="Published Reports" value={stats.publishedReports} link="/reports" />
+                <CompactStat title="Rejected Reports" value={stats.rejectedReports} link="/reports" />
+                <CompactStat title="Unread Notifications" value={stats.unreadNotifications} link="/notifications" />
               </div>
-            )}
-          </div>
-
-          {/* Report Statistics Bar Chart */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Report Statistics</h2>
-              <BarChart3 className="w-6 h-6 text-gray-400" />
             </div>
-            {reportStatusData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={reportStatusData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                    {reportStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
-                No report data available
+          </section>
+
+          <section>
+            <div className="admin-panel p-4">
+              <h2 className="mb-3 text-base font-semibold text-slate-800">Website Leads & Engagement</h2>
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                <CompactStat title="Total Leads" value={stats.totalLeads} link="/leads" />
+                <CompactStat title="Leads Today" value={stats.leadsToday} link="/leads" />
+                <CompactStat title="Leads (7 Days)" value={stats.leadsThisWeek} link="/leads" />
+                <CompactStat title="FCM Tokens" value={stats.totalFcmTokens} link="/notifications" />
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Link href="/users">
-            <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow cursor-pointer border-t-4 border-blue-500">
-              <Users className="w-12 h-12 text-blue-500 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">User Management</h3>
-              <p className="text-gray-600">View and manage all registered users</p>
             </div>
-          </Link>
+          </section>
 
-          <Link href="/reports">
-            <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow cursor-pointer border-t-4 border-purple-500">
-              <FileText className="w-12 h-12 text-purple-500 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Reports Management</h3>
-              <p className="text-gray-600">Monitor and manage all filed reports</p>
+          <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="admin-panel p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-900">Report Status Distribution</h3>
+                <PieChartIcon className="h-5 w-5 text-slate-400" />
+              </div>
+              {reportStatusData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={reportStatusData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      dataKey="value"
+                    >
+                      {reportStatusData.map((entry, index) => (
+                        <Cell key={`status-pie-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-60 items-center justify-center text-sm text-slate-500">No report data available</div>
+              )}
             </div>
-          </Link>
 
-          <Link href="/notifications">
-            <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow cursor-pointer border-t-4 border-green-500">
-              <Bell className="w-12 h-12 text-green-500 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Notifications</h3>
-              <p className="text-gray-600">View all system notifications</p>
+            <div className="admin-panel p-6">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-900">Report Status Counts</h3>
+                <BarChart3 className="h-5 w-5 text-slate-400" />
+              </div>
+              {reportStatusData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={reportStatusData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" tick={{ fill: '#475569', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#475569', fontSize: 12 }} />
+                    <Tooltip />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                      {reportStatusData.map((entry, index) => (
+                        <Cell key={`status-bar-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-60 items-center justify-center text-sm text-slate-500">No report data available</div>
+              )}
             </div>
-          </Link>
-        </div>
+          </section>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Recent Activity</h2>
-            <TrendingUp className="w-6 h-6 text-gray-400" />
-          </div>
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <QuickLink href="/users" title="Users" description="Verification, suspension, profile details" icon={<Users className="h-5 w-5 text-blue-600" />} />
+            <QuickLink href="/reports" title="Reports" description="Status workflow and issue tracking" icon={<FileText className="h-5 w-5 text-violet-600" />} />
+            <QuickLink href="/notifications" title="Notifications" description="System alerts and recipient logs" icon={<Bell className="h-5 w-5 text-emerald-600" />} />
+            <QuickLink href="/leads" title="Website Leads" description="Landing signup funnel and contact list" icon={<UserPlus className="h-5 w-5 text-indigo-600" />} />
+          </section>
 
-          <div className="space-y-4">
-            {recentActivity.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No recent activity</p>
-            ) : (
-              recentActivity.map((activity, index) => (
-                <div
-                  key={activity.id + index}
-                  className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className={`p-2 rounded-full ${
-                    activity.type === 'user' ? 'bg-blue-100' :
-                    activity.type === 'report' ? 'bg-purple-100' :
-                    'bg-green-100'
-                  }`}>
-                    {activity.type === 'user' && <Users className="w-5 h-5 text-blue-600" />}
-                    {activity.type === 'report' && <FileText className="w-5 h-5 text-purple-600" />}
-                    {activity.type === 'notification' && <Bell className="w-5 h-5 text-green-600" />}
+          <section className="admin-panel p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-900">Recent Activity</h3>
+              <TrendingUp className="h-5 w-5 text-slate-400" />
+            </div>
+            <div className="space-y-3">
+              {recentActivity.length === 0 ? (
+                <p className="py-6 text-center text-sm text-slate-500">No recent activity</p>
+              ) : (
+                recentActivity.map((activity, index) => (
+                  <div key={activity.id + index} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className={`rounded-lg p-2 ${
+                      activity.type === 'user'
+                        ? 'bg-blue-100'
+                        : activity.type === 'report'
+                        ? 'bg-violet-100'
+                        : activity.type === 'lead'
+                        ? 'bg-indigo-100'
+                        : 'bg-emerald-100'
+                    }`}>
+                      {activity.type === 'user' && <Users className="h-4 w-4 text-blue-700" />}
+                      {activity.type === 'report' && <FileText className="h-4 w-4 text-violet-700" />}
+                      {activity.type === 'lead' && <UserPlus className="h-4 w-4 text-indigo-700" />}
+                      {activity.type === 'notification' && <Bell className="h-4 w-4 text-emerald-700" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">{activity.message}</p>
+                      <p className="mt-1 text-xs text-slate-500">{new Date(activity.timestamp).toLocaleString('en-IN')}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-gray-900 font-medium">{activity.message}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {new Date(activity.timestamp).toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </main>
-    </div>
+                ))
+              )}
+            </div>
+          </section>
+        </main>
+      </div>
     </ProtectedRoute>
+  );
+}
+
+function QuickLink({ href, title, description, icon }: { href: string; title: string; description: string; icon: React.ReactNode }) {
+  return (
+    <Link href={href}>
+      <div className="admin-panel h-full p-5 transition-colors hover:bg-slate-50">
+        <div className="mb-3 inline-flex rounded-lg bg-slate-100 p-2">{icon}</div>
+        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+        <p className="mt-1 text-xs text-slate-600">{description}</p>
+      </div>
+    </Link>
+  );
+}
+
+function CompactStat({ title, value, link }: { title: string; value: number; link: string }) {
+  return (
+    <Link href={link}>
+      <div className="h-full min-h-[108px] rounded-lg border border-slate-200 bg-white px-3 py-3 text-center transition-colors hover:bg-slate-50">
+        <p className="line-clamp-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">{title}</p>
+        <p className="mt-3 text-2xl font-semibold leading-none text-slate-900">{value}</p>
+      </div>
+    </Link>
   );
 }

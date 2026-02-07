@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
+  getAuth,
   User,
   signInWithEmailAndPassword,
   signOut,
@@ -9,7 +10,7 @@ import {
   setPersistence,
   browserLocalPersistence
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import app from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
@@ -32,6 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    const auth = getAuth(app);
+
     // Set persistence to local (survives browser restarts)
     setPersistence(auth, browserLocalPersistence);
 
@@ -46,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      const auth = getAuth(app);
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
       throw new Error(error.message || 'Failed to login');
@@ -54,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      const auth = getAuth(app);
       await signOut(auth);
       router.push('/login');
     } catch (error: any) {

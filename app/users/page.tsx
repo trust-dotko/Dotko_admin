@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import Link from 'next/link';
-import { ArrowLeft, Search, Users as UsersIcon, Building2, Mail, Phone, Calendar, CheckCircle, XCircle, Trash2, Shield, Eye, Star } from 'lucide-react';
+import { Search, Users as UsersIcon, Building2, Mail, Phone, XCircle, Trash2, Shield, Eye, Star } from 'lucide-react';
 import ConfirmModal from '@/components/ConfirmModal';
 import Toast from '@/components/Toast';
 import Navbar from '@/components/Navbar';
@@ -204,74 +203,50 @@ export default function UsersPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="admin-page">
         <Navbar />
 
       {/* Page Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
+      <header className="admin-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-            <p className="text-gray-600 mt-1">View and manage all registered users</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">User Management</h1>
+            <p className="mt-1 text-slate-600">View and manage all registered users</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="admin-main space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Total Users</p>
-                <p className="text-3xl font-bold mt-2">{users.length}</p>
-              </div>
-              <UsersIcon className="w-10 h-10 text-blue-500" />
+        <section className="admin-panel p-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="admin-metric">
+              <p className="admin-metric-label">Total Users</p>
+              <p className="admin-metric-value">{users.length}</p>
+            </div>
+            <div className="admin-metric">
+              <p className="admin-metric-label">Verified Users</p>
+              <p className="admin-metric-value">{users.filter(u => u.verified).length}</p>
+            </div>
+            <div className="admin-metric">
+              <p className="admin-metric-label">Completed Onboarding</p>
+              <p className="admin-metric-value">{users.filter(u => u.onboardingCompleted).length}</p>
+            </div>
+            <div className="admin-metric">
+              <p className="admin-metric-label">Suspended Users</p>
+              <p className="admin-metric-value">{users.filter(u => u.suspended).length}</p>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Verified Users</p>
-                <p className="text-3xl font-bold mt-2">
-                  {users.filter(u => u.verified).length}
-                </p>
-              </div>
-              <Shield className="w-10 h-10 text-green-500" />
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Completed Onboarding</p>
-                <p className="text-3xl font-bold mt-2">
-                  {users.filter(u => u.onboardingCompleted).length}
-                </p>
-              </div>
-              <Building2 className="w-10 h-10 text-purple-500" />
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-red-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Suspended Users</p>
-                <p className="text-3xl font-bold mt-2">
-                  {users.filter(u => u.suspended).length}
-                </p>
-              </div>
-              <XCircle className="w-10 h-10 text-red-500" />
-            </div>
-          </div>
-        </div>
+        </section>
 
         {/* Search */}
-        <div className="bg-white p-4 rounded-xl shadow-md mb-6">
+        <div className="admin-panel p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-slate-400" />
             <input
               type="text"
               placeholder="Search by business name, email, GST, or mobile..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="admin-input pl-10 pr-4"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -279,21 +254,21 @@ export default function UsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="admin-panel overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading users...</p>
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-sky-600"></div>
+              <p className="mt-4 text-slate-600">Loading users...</p>
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="p-12 text-center">
-              <UsersIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600">No users found</p>
+              <UsersIcon className="mx-auto mb-4 h-16 w-16 text-slate-300" />
+              <p className="text-slate-600">No users found</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="border-b border-slate-200 bg-slate-50/80">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Business Name

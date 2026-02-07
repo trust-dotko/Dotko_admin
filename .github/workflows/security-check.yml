@@ -1,0 +1,50 @@
+# Security Check Workflow
+# This runs on every push to check for accidentally committed secrets
+
+name: Security Check
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['*']
+
+jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check for accidentally committed .env files
+        run: |
+          if git ls-files | grep -E "\.env\.local|\.env$" | grep -v ".env.example"; then
+            echo "❌ ERROR: .env files found in git!"
+            echo "The following files should NOT be committed:"
+            git ls-files | grep -E "\.env\.local|\.env$" | grep -v ".env.example"
+            exit 1
+          else
+            echo "✅ No .env files found in git"
+          fi
+
+      - name: Check for hardcoded API keys
+        run: |
+          if git grep -E "AIzaSy[A-Za-z0-9_-]{33}" -- '*.ts' '*.tsx' '*.js' '*.jsx' ':!*.md' ':!.env.example'; then
+            echo "❌ WARNING: Potential Firebase API key found in code!"
+            echo "Make sure all API keys are in environment variables"
+            exit 1
+          else
+            echo "✅ No hardcoded Firebase API keys found"
+          fi
+
+      - name: Check for hardcoded private keys
+        run: |
+          if git grep -E "BEGIN PRIVATE KEY" -- '*.ts' '*.tsx' '*.js' '*.jsx' ':!*.md' ':!.env.example'; then
+            echo "❌ ERROR: Private key found in code!"
+            echo "Private keys must NEVER be committed"
+            exit 1
+          else
+            echo "✅ No private keys found"
+          fi
+
+      - name: Security check passed
+        run: echo "✅ All security checks passed!"

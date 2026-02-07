@@ -46,22 +46,22 @@ export default function InputModal({
       ></div>
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 animate-in fade-in zoom-in duration-200">
+      <div className="relative mx-4 w-full max-w-md animate-in zoom-in rounded-2xl border border-slate-200/90 bg-white/95 p-6 shadow-2xl duration-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-gray-900">
+          <h3 className="text-xl font-bold text-slate-900">
             {title}
           </h3>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-slate-400 transition-colors hover:text-slate-600"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Message */}
-        <p className="text-gray-600 mb-4">
+        <p className="mb-4 text-slate-600">
           {message}
         </p>
 
@@ -70,7 +70,7 @@ export default function InputModal({
           <select
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-6"
+            className="admin-select mb-6 w-full"
             autoFocus
           >
             {options.map((option) => (
@@ -85,7 +85,7 @@ export default function InputModal({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder={placeholder}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-6"
+            className="admin-input mb-6"
             autoFocus
             onKeyPress={(e) => {
               if (e.key === 'Enter') {
@@ -99,13 +99,13 @@ export default function InputModal({
         <div className="flex gap-3">
           <button
             onClick={handleClose}
-            className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+            className="flex-1 rounded-xl bg-slate-100 px-4 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-200"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition-colors hover:bg-slate-800"
           >
             Confirm
           </button>

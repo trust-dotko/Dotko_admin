@@ -58,19 +58,19 @@ export default function ConfirmModal({
       ></div>
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 animate-in fade-in zoom-in duration-200">
+      <div className="relative mx-4 w-full max-w-md animate-in zoom-in rounded-2xl border border-slate-200/90 bg-white/95 p-6 shadow-2xl duration-200">
         {/* Icon */}
         <div className="flex justify-center mb-4">
           {getIcon()}
         </div>
 
         {/* Title */}
-        <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+        <h3 className="mb-2 text-center text-xl font-bold text-slate-900">
           {title}
         </h3>
 
         {/* Message */}
-        <p className="text-gray-600 text-center mb-6">
+        <p className="mb-6 text-center text-slate-600">
           {message}
         </p>
 
@@ -78,7 +78,7 @@ export default function ConfirmModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+            className="flex-1 rounded-xl bg-slate-100 px-4 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-200"
           >
             {cancelText}
           </button>
@@ -87,7 +87,7 @@ export default function ConfirmModal({
               onConfirm();
               onClose();
             }}
-            className={`flex-1 px-4 py-3 ${getButtonColor()} text-white rounded-lg font-medium transition-colors`}
+            className={`flex-1 rounded-xl px-4 py-3 ${getButtonColor()} font-medium text-white transition-colors`}
           >
             {confirmText}
           </button>

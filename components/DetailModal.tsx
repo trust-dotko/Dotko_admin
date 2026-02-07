@@ -14,8 +14,11 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
   const fieldOrder: Record<string, number> = {
     // Business & Identity (Priority 1-10)
     businessName: 1,
+    name: 2,
+    fullName: 3,
     customerName: 2,
     supplierBusinessName: 3,
+    company: 4,
     gst: 4,
     customerGSTIN: 5,
     recipientGSTIN: 6,
@@ -29,6 +32,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
     mobileNumber: 14,
     customerMobileNumber: 15,
     phone: 16,
+    source: 19,
 
     // Trust Score & Breakdown (Priority 17-20)
     trustScore: 17,
@@ -98,6 +102,10 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
       mobileNumber: 'Mobile Number',
       customerMobileNumber: 'Customer Mobile',
       businessName: 'Business Name',
+      name: 'Name',
+      fullName: 'Full Name',
+      company: 'Company',
+      source: 'Source',
       customerName: 'Customer Name',
       supplierBusinessName: 'Supplier Business Name',
       entityType: 'Entity Type',
@@ -299,7 +307,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-slate-900 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white bg-opacity-20 rounded-lg">
               <FileText className="w-6 h-6 text-white" />
@@ -308,7 +316,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
               <h3 className="text-xl font-bold text-white">
                 {title}
               </h3>
-              <p className="text-blue-100 text-sm">Complete information</p>
+              <p className="text-slate-200 text-sm">Complete information</p>
             </div>
           </div>
           <button

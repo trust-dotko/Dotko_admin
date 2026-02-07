@@ -38,19 +38,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
+      <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4">
-            <Shield className="w-10 h-10 text-white" />
+          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-xl bg-slate-900">
+            <Shield className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">DOTKO Admin</h1>
-          <p className="text-gray-600">Sign in to access the admin dashboard</p>
+          <h1 className="mb-2 text-3xl font-semibold tracking-tight text-slate-900">DOTKO Admin</h1>
+          <p className="text-slate-600">Sign in to access the admin dashboard</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
@@ -71,7 +71,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="admin-input pl-10 pr-4"
                   placeholder="admin@dotko.in"
                   required
                   disabled={loading}
@@ -91,7 +91,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="admin-input pl-10 pr-12"
                   placeholder="Enter your password"
                   required
                   disabled={loading}
@@ -110,7 +110,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-slate-900 py-3 font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -135,7 +135,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-500 mt-8">
+        <p className="mt-8 text-center text-sm text-slate-500">
           &copy; 2025 DOTKO.IN. All rights reserved.
         </p>
       </div>

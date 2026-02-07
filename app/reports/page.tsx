@@ -1,28 +1,31 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import Link from 'next/link';
-import { ArrowLeft, Search, FileText, Clock, CheckCircle, XCircle, AlertTriangle, Trash2, Edit, Eye } from 'lucide-react';
+import { Search, FileText, Clock, CheckCircle, XCircle, AlertTriangle, Trash2, Edit, Eye, MessageCircle, MessagesSquare } from 'lucide-react';
 import ConfirmModal from '@/components/ConfirmModal';
 import InputModal from '@/components/InputModal';
 import Toast from '@/components/Toast';
 import Navbar from '@/components/Navbar';
 import DetailModal from '@/components/DetailModal';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ChatViewer from '@/components/ChatViewer';
 
 interface Report {
   id: string;
   customerName: string;
   customerEmail: string;
   customerGSTIN: string;
+  customerWhatsapp?: string;
   supplierBusinessName: string;
   amount: number;
   invoiceNumber: string;
   status: string;
   typeOfComplaint: string;
   createdAt: string;
+  whatsappMessageSent?: boolean;
+  whatsappMessageSentAt?: string;
 }
 
 export default function ReportsPage() {
@@ -73,6 +76,22 @@ export default function ReportsPage() {
   }>({
     isOpen: false,
     report: null
+  });
+
+  const [chatViewer, setChatViewer] = useState<{
+    isOpen: boolean;
+    reportId: string;
+    reportDetails: {
+      customerName: string;
+      supplierBusinessName: string;
+    };
+  }>({
+    isOpen: false,
+    reportId: '',
+    reportDetails: {
+      customerName: '',
+      supplierBusinessName: ''
+    }
   });
 
   useEffect(() => {
@@ -145,7 +164,7 @@ export default function ReportsPage() {
     try {
       await updateDoc(doc(db, 'reports', inputModal.reportId), {
         status: newStatus,
-        updatedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
         updatedBy: 'admin',
       });
       await fetchReports();
@@ -191,6 +210,87 @@ export default function ReportsPage() {
     });
   };
 
+  const generateWhatsAppMessage = (report: Report): string => {
+    const message = `Dear ${report.customerName},
+
+This is an official notice from DOTKO.IN regarding a payment dispute filed against your company.
+
+*Report Details:*
+• Supplier: ${report.supplierBusinessName || 'N/A'}
+• Amount Due: ₹${report.amount?.toLocaleString('en-IN')}
+• Invoice Number: ${report.invoiceNumber}
+• Type: ${report.typeOfComplaint || 'Payment Issue'}
+• Status: ${report.status.toUpperCase()}
+
+*Action Required:*
+Please review this matter urgently and contact the supplier to resolve the outstanding payment. Unresolved disputes may affect your credit rating and business reputation.
+
+For more details, visit: https://dotko.in
+
+Regards,
+DOTKO.IN Team`;
+
+    return message;
+  };
+
+  const handleViewChats = (report: Report) => {
+    setChatViewer({
+      isOpen: true,
+      reportId: report.id,
+      reportDetails: {
+        customerName: report.customerName,
+        supplierBusinessName: report.supplierBusinessName || 'N/A'
+      }
+    });
+  };
+
+  const handleSendWhatsApp = async (report: Report) => {
+    // Generate message
+    const message = generateWhatsAppMessage(report);
+
+    // Get phone number (remove any formatting)
+    let phone = report.customerWhatsapp || '';
+    phone = phone.replace(/\D/g, ''); // Remove non-digits
+
+    // If phone doesn't start with country code, assume India (+91)
+    if (phone.length === 10) {
+      phone = '91' + phone;
+    }
+
+    // Encode message for URL
+    const encodedMessage = encodeURIComponent(message);
+
+    // Open WhatsApp with pre-filled message
+    const whatsappUrl = phone
+      ? `https://wa.me/${phone}?text=${encodedMessage}`
+      : `https://wa.me/?text=${encodedMessage}`;
+
+    // Open in new window
+    window.open(whatsappUrl, '_blank');
+
+    // Mark as sent in Firestore
+    try {
+      await updateDoc(doc(db, 'reports', report.id), {
+        whatsappMessageSent: true,
+        whatsappMessageSentAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      await fetchReports();
+      setToast({
+        isOpen: true,
+        message: 'WhatsApp opened! Message marked as sent.',
+        type: 'success'
+      });
+    } catch (error) {
+      console.error('Error marking WhatsApp message as sent:', error);
+      setToast({
+        isOpen: true,
+        message: 'Failed to mark message as sent.',
+        type: 'error'
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -231,75 +331,57 @@ export default function ReportsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="admin-page">
         <Navbar />
 
       {/* Page Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
+      <header className="admin-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Reports Management</h1>
-            <p className="text-gray-600 mt-1">Monitor and manage all filed reports</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Reports Management</h1>
+            <p className="mt-1 text-slate-600">Monitor and manage all filed reports</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="admin-main space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Total Reports</p>
-                <p className="text-3xl font-bold mt-2">{stats.total}</p>
-              </div>
-              <FileText className="w-10 h-10 text-purple-500" />
+        <section className="admin-panel p-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="admin-metric">
+              <p className="admin-metric-label">Total Reports</p>
+              <p className="admin-metric-value">{stats.total}</p>
+            </div>
+            <div className="admin-metric">
+              <p className="admin-metric-label">Pending</p>
+              <p className="admin-metric-value">{stats.pending}</p>
+            </div>
+            <div className="admin-metric">
+              <p className="admin-metric-label">Resolved</p>
+              <p className="admin-metric-value">{stats.resolved}</p>
+            </div>
+            <div className="admin-metric">
+              <p className="admin-metric-label">Published</p>
+              <p className="admin-metric-value">{stats.published}</p>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Pending</p>
-                <p className="text-3xl font-bold mt-2">{stats.pending}</p>
-              </div>
-              <Clock className="w-10 h-10 text-orange-500" />
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Resolved</p>
-                <p className="text-3xl font-bold mt-2">{stats.resolved}</p>
-              </div>
-              <CheckCircle className="w-10 h-10 text-green-500" />
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-red-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Published</p>
-                <p className="text-3xl font-bold mt-2">{stats.published}</p>
-              </div>
-              <AlertTriangle className="w-10 h-10 text-red-500" />
-            </div>
-          </div>
-        </div>
+        </section>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-xl shadow-md mb-6">
+        <div className="admin-panel p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-slate-400" />
               <input
                 type="text"
                 placeholder="Search by customer, supplier, invoice, or GST..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="admin-input pl-10 pr-4"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             <select
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="admin-select"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -314,21 +396,21 @@ export default function ReportsPage() {
         </div>
 
         {/* Reports Table */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="admin-panel overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading reports...</p>
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-sky-600"></div>
+              <p className="mt-4 text-slate-600">Loading reports...</p>
             </div>
           ) : filteredReports.length === 0 ? (
             <div className="p-12 text-center">
-              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600">No reports found</p>
+              <FileText className="mx-auto mb-4 h-16 w-16 text-slate-300" />
+              <p className="text-slate-600">No reports found</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="border-b border-slate-200 bg-slate-50/80">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Customer
@@ -395,6 +477,24 @@ export default function ReportsPage() {
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => handleViewChats(report)}
+                            className="p-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-lg transition-colors"
+                            title="View Chat History"
+                          >
+                            <MessagesSquare className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleSendWhatsApp(report)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              report.whatsappMessageSent
+                                ? 'bg-green-100 hover:bg-green-200 text-green-600'
+                                : 'bg-red-100 hover:bg-red-200 text-red-600'
+                            }`}
+                            title={report.whatsappMessageSent ? 'WhatsApp sent - Click to resend' : 'Send WhatsApp message'}
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => handleUpdateStatus(report.id, report.status)}
                             className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-colors"
                             title="Update Status"
@@ -451,6 +551,13 @@ export default function ReportsPage() {
         onClose={() => setDetailModal({ isOpen: false, report: null })}
         title={`Report Details: ${detailModal.report?.customerName || ''}`}
         data={detailModal.report || {}}
+      />
+
+      <ChatViewer
+        isOpen={chatViewer.isOpen}
+        onClose={() => setChatViewer({ ...chatViewer, isOpen: false })}
+        reportId={chatViewer.reportId}
+        reportDetails={chatViewer.reportDetails}
       />
       </div>
     </ProtectedRoute>

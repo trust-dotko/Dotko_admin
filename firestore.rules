@@ -226,6 +226,35 @@ service cloud.firestore {
 
       // DELETE: Only admins can delete reports (for moderation)
       allow delete: if isAdmin();
+
+      // ==========================================
+      // CHATS SUBCOLLECTION (within reports)
+      // ==========================================
+      match /chats/{chatId} {
+        // READ: Admin can read all chats, supplier and customer can read their own
+        allow read: if isAuthenticated() && (
+          isAdmin() ||
+          get(/databases/$(database)/documents/reports/$(reportId)).data.supplierId == request.auth.uid ||
+          get(/databases/$(database)/documents/reports/$(reportId)).data.customerEmail == request.auth.token.email
+        );
+
+        // CREATE: Authenticated users involved in the report can create chats
+        allow create: if isAuthenticated() && (
+          get(/databases/$(database)/documents/reports/$(reportId)).data.supplierId == request.auth.uid ||
+          get(/databases/$(database)/documents/reports/$(reportId)).data.customerEmail == request.auth.token.email
+        ) &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.senderId is string &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() > 0 &&
+        request.resource.data.message.size() <= 1000;
+
+        // UPDATE: Cannot update chats
+        allow update: if false;
+
+        // DELETE: Only admins can delete chats
+        allow delete: if isAdmin();
+      }
     }
 
     // ==========================================

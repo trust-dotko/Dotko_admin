@@ -60,7 +60,7 @@ export default function Toast({
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
-      <div className={`${styles.bg} border-l-4 rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[320px] max-w-md`}>
+      <div className={`${styles.bg} flex min-w-[320px] max-w-md items-center gap-3 rounded-xl border border-slate-200 p-4 shadow-xl`}>
         {styles.icon}
         <p className={`flex-1 font-medium ${styles.text}`}>
           {message}
