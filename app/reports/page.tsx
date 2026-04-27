@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 import { Search, FileText, Clock, CheckCircle, XCircle, AlertTriangle, Trash2, Edit, Eye, MessageCircle, MessagesSquare } from 'lucide-react';
 import ConfirmModal from '@/components/ConfirmModal';
 import InputModal from '@/components/InputModal';
@@ -29,6 +30,7 @@ interface Report {
 }
 
 export default function ReportsPage() {
+  const { user: currentUser } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -191,18 +193,38 @@ export default function ReportsPage() {
       type: 'danger',
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, 'reports', reportId));
+          if (!currentUser) {
+            throw new Error('User not authenticated');
+          }
+          
+          const idToken = await currentUser.getIdToken();
+          
+          // Call secure admin API to delete the report
+          const response = await fetch('https://web.dotko.in/api/admin/deleteReport', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({ reportId })
+          });
+          
+          const result = await response.json();
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Failed to delete report');
+          }
+          
           await fetchReports();
           setToast({
             isOpen: true,
             message: 'Report deleted successfully!',
             type: 'success'
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error deleting report:', error);
           setToast({
             isOpen: true,
-            message: 'Failed to delete report.',
+            message: error.message || 'Failed to delete report.',
             type: 'error'
           });
         }

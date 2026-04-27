@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Search, Users as UsersIcon, Building2, Mail, Phone, XCircle, Trash2, Shield, Eye, Star } from 'lucide-react';
@@ -36,6 +36,7 @@ interface User {
 }
 
 export default function UsersPage() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,55 +176,53 @@ export default function UsersPage() {
     });
   };
 
-   const handleDeleteUser = async (userId: string, businessName: string) => {
-     setConfirmModal({
-       isOpen: true,
-       title: 'Delete User',
-       message: `Are you sure you want to permanently delete ${businessName}? This action cannot be undone and will remove all user data.`,
-       type: 'danger',
-       onConfirm: async () => {
-         try {
-           // Get the current user's ID token for authentication
-           const { user } = useAuth();
-           if (!user) {
-             throw new Error('User not authenticated');
-           }
-           
-           const idToken = await user.getIdToken();
-           
-           // Call the secure admin API to delete the user
-           const response = await fetch('https://web.dotko.in/api/admin/deleteUser', {
-             method: 'POST',
-             headers: {
-               'Content-Type': 'application/json',
-               'Authorization': `Bearer ${idToken}`
-             },
-             body: JSON.stringify({ targetUid: userId })
-           });
-           
-           const result = await response.json();
-           
-           if (!response.ok || !result.success) {
-             throw new Error(result.error || 'Failed to delete user');
-           }
-           
-           await fetchUsers();
-           setToast({
-             isOpen: true,
-             message: 'User deleted successfully!',
-             type: 'success'
-           });
-         } catch (error) {
-           console.error('Error deleting user:', error);
-           setToast({
-             isOpen: true,
-             message: error.message || 'Failed to delete user.',
-             type: 'error'
-           });
-         }
-       }
-     });
-   };
+  const handleDeleteUser = async (userId: string, businessName: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete User',
+      message: `Are you sure you want to permanently delete ${businessName}? This action cannot be undone and will remove all user data.`,
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          if (!currentUser) {
+            throw new Error('User not authenticated');
+          }
+          
+          const idToken = await currentUser.getIdToken();
+          
+          // Call the secure admin API to delete the user
+          const response = await fetch('https://web.dotko.in/api/admin/deleteUser', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({ targetUid: userId })
+          });
+          
+          const result = await response.json();
+          
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Failed to delete user');
+          }
+          
+          await fetchUsers();
+          setToast({
+            isOpen: true,
+            message: 'User deleted successfully!',
+            type: 'success'
+          });
+        } catch (error: any) {
+          console.error('Error deleting user:', error);
+          setToast({
+            isOpen: true,
+            message: error.message || 'Failed to delete user.',
+            type: 'error'
+          });
+        }
+      }
+    });
+  };
 
   return (
     <ProtectedRoute>
