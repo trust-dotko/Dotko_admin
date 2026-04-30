@@ -11,6 +11,17 @@ import Navbar from '@/components/Navbar';
 import DetailModal from '@/components/DetailModal';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
+function formatDate(value: any): string {
+  if (!value) return 'N/A';
+  let date: Date | null = null;
+  if (value instanceof Date) date = value;
+  else if (typeof value?.toDate === 'function') date = value.toDate();
+  else if (typeof value?.seconds === 'number') date = new Date(value.seconds * 1000);
+  else { date = new Date(value); }
+  if (!date || isNaN(date.getTime())) return 'N/A';
+  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 interface User {
   id: string;
   businessName: string;
@@ -19,7 +30,7 @@ interface User {
   gst: string;
   pan: string;
   entityType: string;
-  createdAt: string;
+  createdAt: any;
   onboardingCompleted: boolean;
   verified?: boolean;
   suspended?: boolean;
@@ -393,9 +404,7 @@ export default function UsersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {user.createdAt
-                          ? new Date(user.createdAt).toLocaleDateString('en-IN')
-                          : 'N/A'}
+                        {formatDate(user.createdAt)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">

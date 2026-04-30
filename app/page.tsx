@@ -94,18 +94,22 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
 
-      const [usersSnapshot, reportsSnapshot, notificationsSnapshot, leadsSnapshot, tokensSnapshot] = await Promise.all([
-        getDocs(collection(db, 'users')),
-        getDocs(collection(db, 'reports')),
-        getDocs(collection(db, 'notifications')),
-        getDocs(collection(db, 'landing_signups')),
-        getDocs(collection(db, 'fcm_tokens')),
-      ]);
+      // Fetch each collection independently so one failure doesn't zero everything out
+      const safeGet = async (col: string) => {
+        try { return (await getDocs(collection(db, col))).docs.map(d => ({ id: d.id, ...d.data() })); }
+        catch { return []; }
+      };
+      const safeQuery = async (col: string) => {
+        try { return await getDocs(query(collection(db, col), orderBy('createdAt', 'desc'), limit(4))); }
+        catch { return null; }
+      };
 
-      const users = usersSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      const reports = reportsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      const notifications = notificationsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      const leads = leadsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const [users, reports, notifications, leads] = await Promise.all([
+        safeGet('users'),
+        safeGet('reports'),
+        safeGet('notifications'),
+        safeGet('landing_signups'),
+      ]);
 
       const now = new Date();
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -134,22 +138,12 @@ export default function AdminDashboard() {
         return createdAt ? createdAt >= startOfWeek : false;
       }).length;
 
-      const totalFcmTokens = tokensSnapshot.size;
-
       setStats({
-        totalUsers,
-        verifiedUsers,
-        totalReports,
-        pendingReports,
-        resolvedReports,
-        publishedReports,
-        rejectedReports,
-        totalNotifications,
-        unreadNotifications,
-        totalLeads,
-        leadsToday,
-        leadsThisWeek,
-        totalFcmTokens,
+        totalUsers, verifiedUsers, totalReports, pendingReports,
+        resolvedReports, publishedReports, rejectedReports,
+        totalNotifications, unreadNotifications,
+        totalLeads, leadsToday, leadsThisWeek,
+        totalFcmTokens: 0,
       });
 
       setReportStatusData(
@@ -163,37 +157,34 @@ export default function AdminDashboard() {
 
       const activities: RecentActivity[] = [];
 
-      const [recentUsers, recentReports, recentLeads] = await Promise.all([
-        getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(4))),
-        getDocs(query(collection(db, 'reports'), orderBy('createdAt', 'desc'), limit(4))),
-        getDocs(query(collection(db, 'landing_signups'), orderBy('createdAt', 'desc'), limit(4))),
+      const [recentUsersSnap, recentReportsSnap, recentLeadsSnap] = await Promise.all([
+        safeQuery('users'),
+        safeQuery('reports'),
+        safeQuery('landing_signups'),
       ]);
 
-      recentUsers.forEach((doc) => {
+      recentUsersSnap?.forEach((doc) => {
         const data = doc.data() as any;
         activities.push({
-          id: doc.id,
-          type: 'user',
+          id: doc.id, type: 'user',
           message: `User registered: ${data.businessName || data.email || 'Unknown'}`,
           timestamp: toIso(data.createdAt),
         });
       });
 
-      recentReports.forEach((doc) => {
+      recentReportsSnap?.forEach((doc) => {
         const data = doc.data() as any;
         activities.push({
-          id: doc.id,
-          type: 'report',
+          id: doc.id, type: 'report',
           message: `Report filed by ${data.customerName || 'Unknown'}`,
           timestamp: toIso(data.createdAt),
         });
       });
 
-      recentLeads.forEach((doc) => {
+      recentLeadsSnap?.forEach((doc) => {
         const data = doc.data() as any;
         activities.push({
-          id: doc.id,
-          type: 'lead',
+          id: doc.id, type: 'lead',
           message: `Website lead: ${data.name || data.fullName || data.email || 'Unknown'}`,
           timestamp: toIso(data.createdAt),
         });

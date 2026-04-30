@@ -13,6 +13,17 @@ import DetailModal from '@/components/DetailModal';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ChatViewer from '@/components/ChatViewer';
 
+function formatDate(value: any): string {
+  if (!value) return 'N/A';
+  let date: Date | null = null;
+  if (value instanceof Date) date = value;
+  else if (typeof value?.toDate === 'function') date = value.toDate();
+  else if (typeof value?.seconds === 'number') date = new Date(value.seconds * 1000);
+  else { date = new Date(value); }
+  if (!date || isNaN(date.getTime())) return 'N/A';
+  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 interface Report {
   id: string;
   customerName: string;
@@ -24,7 +35,7 @@ interface Report {
   invoiceNumber: string;
   status: string;
   typeOfComplaint: string;
-  createdAt: string;
+  createdAt: any;
   whatsappMessageSent?: boolean;
   whatsappMessageSentAt?: string;
 }
@@ -435,10 +446,10 @@ DOTKO.IN Team`;
                 <thead className="border-b border-slate-200 bg-slate-50/80">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Customer
+                      Complainant
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Supplier
+                      Against
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Amount
@@ -485,9 +496,7 @@ DOTKO.IN Team`;
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {report.createdAt
-                          ? new Date(report.createdAt).toLocaleDateString('en-IN')
-                          : 'N/A'}
+                        {formatDate(report.createdAt)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
