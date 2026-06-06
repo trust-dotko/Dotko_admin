@@ -211,13 +211,13 @@ export default function ReportsPage() {
           const idToken = await currentUser.getIdToken();
           
           // Call secure admin API to delete the report
-          const response = await fetch('https://web.dotko.in/api/admin/deleteReport', {
+          const response = await fetch('https://web.dotko.in/api/admin/delete', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${idToken}`
             },
-            body: JSON.stringify({ reportId })
+            body: JSON.stringify({ type: 'report', reportId })
           });
           
           const result = await response.json();

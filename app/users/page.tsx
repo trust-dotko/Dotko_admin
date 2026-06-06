@@ -202,13 +202,13 @@ export default function UsersPage() {
           const idToken = await currentUser.getIdToken();
           
           // Call the secure admin API to delete the user
-          const response = await fetch('https://web.dotko.in/api/admin/deleteUser', {
+          const response = await fetch('https://web.dotko.in/api/admin/delete', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${idToken}`
             },
-            body: JSON.stringify({ targetUid: userId })
+            body: JSON.stringify({ type: 'user', targetUid: userId })
           });
           
           const result = await response.json();

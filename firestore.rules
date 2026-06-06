@@ -141,26 +141,29 @@ service cloud.firestore {
       // UPDATE: Admins can update any profile, Users can update their own profile with validation
       // Special case: Allow email verification updates without other validations
       allow update: if isAuthenticated() &&
-                       (isAdmin() || isOwner(userId)) &&
-                       (
-                         // Email verification update (only updating emailVerified and emailVerifiedAt)
-                         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emailVerified', 'emailVerifiedAt']) &&
-                          request.resource.data.emailVerified is bool) ||
+                       (isAdmin() ||
+                        (isOwner(userId) &&
+                         (
+                           // Email verification update (only updating emailVerified and emailVerifiedAt)
+                           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emailVerified', 'emailVerifiedAt']) &&
+                            request.resource.data.emailVerified is bool) ||
 
-                         // Profile update (with full validation)
-                         (rateLimitOk('users', 60) &&
-                          // Cannot change email or userId
-                          request.resource.data.email == resource.data.email &&
-                          // Cannot escalate privileges
-                          (!('isAdmin' in request.resource.data) ||
-                           request.resource.data.isAdmin == resource.data.get('isAdmin', false)) &&
-                          (!('isSuperAdmin' in request.resource.data) ||
-                           request.resource.data.isSuperAdmin == resource.data.get('isSuperAdmin', false)) &&
-                          // Validate required fields
-                          validStringLength(request.resource.data.businessName, 2, 200) &&
-                          validPhone(request.resource.data.mobileNumber) &&
-                          // Update timestamp
-                          request.resource.data.updatedAt is timestamp)
+                           // Profile update (with full validation)
+                           (rateLimitOk('users', 60) &&
+                            // Cannot change email or userId
+                            request.resource.data.email == resource.data.email &&
+                            // Cannot escalate privileges
+                            (!('isAdmin' in request.resource.data) ||
+                             request.resource.data.isAdmin == resource.data.get('isAdmin', false)) &&
+                            (!('isSuperAdmin' in request.resource.data) ||
+                             request.resource.data.isSuperAdmin == resource.data.get('isSuperAdmin', false)) &&
+                            // Validate required fields
+                            validStringLength(request.resource.data.businessName, 2, 200) &&
+                            validPhone(request.resource.data.mobileNumber) &&
+                            // Update timestamp
+                            request.resource.data.updatedAt is timestamp)
+                         )
+                        )
                        );
 
       // DELETE: Only admins can delete user profiles
