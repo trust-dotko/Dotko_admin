@@ -32,20 +32,20 @@ export default function ConfirmModal({
       case 'success':
         return <CheckCircle className="w-12 h-12 text-green-500" />;
       case 'info':
-        return <Info className="w-12 h-12 text-blue-500" />;
+        return <Info className="w-12 h-12 text-brand-700" />;
     }
   };
 
   const getButtonColor = () => {
     switch (type) {
       case 'danger':
-        return 'bg-red-600 hover:bg-red-700';
+        return 'bg-red-600 hover:bg-red-700 shadow-red-100';
       case 'warning':
-        return 'bg-orange-600 hover:bg-orange-700';
+        return 'bg-orange-600 hover:bg-orange-700 shadow-orange-100';
       case 'success':
-        return 'bg-green-600 hover:bg-green-700';
+        return 'bg-green-600 hover:bg-green-700 shadow-green-100';
       case 'info':
-        return 'bg-blue-600 hover:bg-blue-700';
+        return 'bg-brand-800 hover:bg-brand-700 shadow-brand-200';
     }
   };
 
@@ -53,12 +53,12 @@ export default function ConfirmModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
       {/* Modal */}
-      <div className="relative mx-4 w-full max-w-md animate-in zoom-in rounded-2xl border border-slate-200/90 bg-white/95 p-6 shadow-2xl duration-200">
+      <div className="relative mx-4 w-full max-w-md animate-in zoom-in-95 rounded-2xl border border-slate-200 bg-white p-6 shadow-card duration-200">
         {/* Icon */}
         <div className="flex justify-center mb-4">
           {getIcon()}
@@ -87,7 +87,7 @@ export default function ConfirmModal({
               onConfirm();
               onClose();
             }}
-            className={`flex-1 rounded-xl px-4 py-3 ${getButtonColor()} font-medium text-white transition-colors`}
+            className={`flex-1 rounded-xl px-4 py-3 ${getButtonColor()} font-medium text-white transition-all shadow-sm`}
           >
             {confirmText}
           </button>

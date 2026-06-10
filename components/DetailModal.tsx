@@ -174,28 +174,28 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
   };
 
   const getTrustScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 bg-green-50 border-green-200';
-    if (score >= 60) return 'text-blue-600 bg-blue-50 border-blue-200';
-    if (score >= 40) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (score >= 80) return 'text-green-600 bg-green-50/60 border-green-200';
+    if (score >= 60) return 'text-brand-800 bg-brand-50/60 border-brand-200';
+    if (score >= 40) return 'text-yellow-600 bg-yellow-50/60 border-yellow-200';
+    return 'text-red-600 bg-red-50/60 border-red-200';
   };
 
   const renderTrustScore = (score: number) => {
     const percentage = Math.min(100, Math.max(0, score));
     return (
       <div className="space-y-3">
-        <div className={`flex items-center gap-3 p-4 rounded-lg border-2 ${getTrustScoreColor(score)}`}>
+        <div className={`flex items-center gap-3 p-4 rounded-xl border ${getTrustScoreColor(score)}`}>
           <Star className="w-6 h-6" fill="currentColor" />
           <div className="flex-1">
             <div className="text-3xl font-bold">{score}/100</div>
-            <div className="text-xs font-medium opacity-80">Overall Trust Score</div>
+            <div className="text-xs font-semibold opacity-85">Overall Trust Score</div>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+        <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200/40">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
               score >= 80 ? 'bg-green-500' :
-              score >= 60 ? 'bg-blue-500' :
+              score >= 60 ? 'bg-brand-600' :
               score >= 40 ? 'bg-yellow-500' : 'bg-red-500'
             }`}
             style={{ width: `${percentage}%` }}
@@ -206,7 +206,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
   };
 
   const renderScoreBreakdown = (breakdown: any) => {
-    if (!breakdown || typeof breakdown !== 'object') return <div className="text-gray-500">No breakdown available</div>;
+    if (!breakdown || typeof breakdown !== 'object') return <div className="text-slate-400 font-medium text-sm">No breakdown available</div>;
 
     const breakdownLabels: Record<string, string> = {
       paymentHistory: 'Payment History',
@@ -224,18 +224,18 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           return (
             <div key={key} className="space-y-1">
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-gray-700">{breakdownLabels[key] || key}</span>
+                <span className="font-medium text-slate-700">{breakdownLabels[key] || key}</span>
                 <span className={`font-bold ${
                   score >= 80 ? 'text-green-600' :
-                  score >= 60 ? 'text-blue-600' :
+                  score >= 60 ? 'text-brand-800' :
                   score >= 40 ? 'text-yellow-600' : 'text-red-600'
                 }`}>{score}/100</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${
                     score >= 80 ? 'bg-green-500' :
-                    score >= 60 ? 'bg-blue-500' :
+                    score >= 60 ? 'bg-brand-600' :
                     score >= 40 ? 'bg-yellow-500' : 'bg-red-500'
                   }`}
                   style={{ width: `${percentage}%` }}
@@ -254,8 +254,8 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
     // Custom rendering for trust score
     if (key === 'trustScore' && typeof value === 'number') {
       return (
-        <div key={key} className="py-3 border-b border-gray-100 last:border-0 col-span-2">
-          <dt className="text-sm font-semibold mb-3 text-blue-700">
+        <div key={key} className="py-3 border-b border-slate-100 last:border-0 col-span-2">
+          <dt className="text-sm font-semibold mb-3 text-brand-800">
             {formatKey(key)}
           </dt>
           <dd>{renderTrustScore(value)}</dd>
@@ -266,8 +266,8 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
     // Custom rendering for score breakdown
     if (key === 'scoreBreakdown') {
       return (
-        <div key={key} className="py-3 border-b border-gray-100 last:border-0 col-span-2">
-          <dt className="text-sm font-semibold mb-3 text-blue-700 flex items-center gap-2">
+        <div key={key} className="py-3 border-b border-slate-100 last:border-0 col-span-2">
+          <dt className="text-sm font-semibold mb-3 text-brand-800 flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             {formatKey(key)}
           </dt>
@@ -280,11 +280,11 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
     const isImportant = getFieldPriority(key) <= 40;
 
     return (
-      <div key={key} className={`py-3 border-b border-gray-100 last:border-0 ${isLongText ? 'col-span-2' : ''}`}>
-        <dt className={`text-sm font-semibold mb-1 ${isImportant ? 'text-blue-700' : 'text-gray-600'}`}>
+      <div key={key} className={`py-3 border-b border-slate-100 last:border-0 ${isLongText ? 'col-span-2' : ''}`}>
+        <dt className={`text-sm font-semibold mb-1 ${isImportant ? 'text-brand-800' : 'text-slate-500'}`}>
           {formatKey(key)}
         </dt>
-        <dd className={`text-sm ${isImportant ? 'text-gray-900 font-medium' : 'text-gray-700'} ${isLongText ? 'whitespace-pre-wrap font-mono text-xs bg-gray-50 p-3 rounded' : ''}`}>
+        <dd className={`text-sm ${isImportant ? 'text-slate-900 font-medium' : 'text-slate-700'} ${isLongText ? 'whitespace-pre-wrap font-mono text-xs bg-slate-50 border border-slate-200/50 p-3 rounded-xl' : ''}`}>
           {formatValue(value)}
         </dd>
       </div>
@@ -300,39 +300,39 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-white rounded-2xl shadow-card border border-slate-200 max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
         {/* Header */}
         <div className="sticky top-0 bg-slate-900 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+            <div className="p-2 bg-white/10 rounded-xl">
               <FileText className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">
+              <h3 className="text-xl font-bold text-white leading-tight">
                 {title}
               </h3>
-              <p className="text-slate-200 text-sm">Complete information</p>
+              <p className="text-slate-400 text-xs mt-0.5 font-medium">Complete Information Summary</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors"
+            className="text-slate-400 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6">
+        <div className="overflow-y-auto flex-1 p-6">
           {/* Business & Identity Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 1 && getFieldPriority(key) <= 10) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-blue-500">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-brand-500">
                 Business & Identity
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -346,7 +346,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           {/* Contact Information Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 11 && getFieldPriority(key) <= 20) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-green-500">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-emerald-500">
                 Contact Information
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -360,7 +360,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           {/* Financial Information Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 21 && getFieldPriority(key) <= 30) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-purple-500">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-indigo-500">
                 Financial Information
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -374,7 +374,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           {/* Status & Type Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 31 && getFieldPriority(key) <= 40) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-orange-500">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-amber-500">
                 Status & Type
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -388,7 +388,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           {/* Main Content Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 41 && getFieldPriority(key) <= 50) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-indigo-500">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-violet-500">
                 Content & Description
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -402,7 +402,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           {/* Location Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 51 && getFieldPriority(key) <= 60) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-teal-500">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-teal-500">
                 Location Details
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -416,7 +416,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           {/* Documents & Evidence Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 61 && getFieldPriority(key) <= 70) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-pink-500">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-pink-500">
                 Documents & Evidence
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -430,7 +430,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           {/* References Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 71 && getFieldPriority(key) <= 80) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-cyan-500">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-sky-500">
                 IDs & References
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -444,7 +444,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           {/* Timestamps Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 81 && getFieldPriority(key) <= 90) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-400">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-slate-400">
                 Timestamps
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -458,7 +458,7 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
           {/* Other Information Section */}
           {sortedEntries.some(([key]) => getFieldPriority(key) >= 91) && (
             <div className="mb-6">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-300">
+              <h4 className="text-base font-bold text-slate-900 mb-4 pb-1.5 border-b-2 border-slate-350">
                 Additional Information
               </h4>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -471,12 +471,12 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
 
           {/* ID displayed separately at the bottom */}
           {data.id && (
-            <div className="mt-6 pt-6 border-t-2 border-gray-200">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+            <div className="mt-6 pt-6 border-t border-slate-200">
+              <div className="bg-slate-50 p-4 border border-slate-200/60 rounded-xl">
+                <dt className="text-xs font-semibold text-slate-450 uppercase tracking-wider mb-2">
                   Document ID
                 </dt>
-                <dd className="text-sm font-mono text-gray-900 break-all">
+                <dd className="text-sm font-mono text-slate-700 break-all select-all">
                   {data.id}
                 </dd>
               </div>
@@ -485,10 +485,10 @@ export default function DetailModal({ isOpen, onClose, title, data }: DetailModa
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div className="sticky bottom-0 bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-end">
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            className="px-6 py-2.5 bg-brand-800 hover:bg-brand-700 text-white rounded-xl font-medium transition-all shadow-sm shadow-brand-200 min-w-32"
           >
             Close
           </button>

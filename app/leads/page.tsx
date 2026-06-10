@@ -133,9 +133,9 @@ export default function LeadsPage() {
         <Navbar />
 
         <header className="admin-header">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            <h1 className="text-3xl font-semibold text-slate-900">Website Leads</h1>
-            <p className="mt-1 text-slate-600">Landing page signups from `landing_signups` collection</p>
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 relative z-10">
+            <h1 className="text-3xl font-bold text-white">Website Leads</h1>
+            <p className="mt-1 text-brand-200">Landing page signups from `landing_signups` collection</p>
           </div>
         </header>
 
@@ -190,7 +190,10 @@ export default function LeadsPage() {
 
           <section className="admin-panel overflow-hidden">
             {loading ? (
-              <div className="p-10 text-center text-slate-600">Loading leads...</div>
+              <div className="p-12 text-center">
+                <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-brand-800"></div>
+                <p className="mt-4 text-slate-600">Loading leads...</p>
+              </div>
             ) : filteredLeads.length === 0 ? (
               <div className="p-12 text-center">
                 <UserPlus className="mx-auto mb-3 h-12 w-12 text-slate-300" />
@@ -199,7 +202,7 @@ export default function LeadsPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="border-b border-slate-200 bg-slate-50">
+                  <thead className="border-b border-brand-100 bg-brand-50/50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Lead</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Contact</th>
@@ -212,7 +215,7 @@ export default function LeadsPage() {
                     {filteredLeads.map((lead) => {
                       const createdAt = toDate(lead.createdAt);
                       return (
-                        <tr key={lead.id} className="hover:bg-slate-50">
+                        <tr key={lead.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="px-6 py-4">
                             <p className="font-medium text-slate-900">{lead.name || lead.fullName || 'Unknown'}</p>
                             <p className="text-xs text-slate-500">{lead.company || 'No company provided'}</p>
@@ -230,7 +233,7 @@ export default function LeadsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-700">
-                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-slate-700">
+                            <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-brand-800 border border-brand-100">
                               {lead.source || 'unknown'}
                             </span>
                           </td>
@@ -243,7 +246,7 @@ export default function LeadsPage() {
                           <td className="px-6 py-4 text-center">
                             <button
                               onClick={() => setDetailModal({ isOpen: true, lead })}
-                              className="rounded-lg border border-slate-200 bg-white p-2 text-slate-700 hover:bg-slate-100"
+                              className="p-2 bg-brand-50 hover:bg-brand-100 text-brand-800 rounded-lg border border-brand-100 transition-colors"
                               title="View lead details"
                             >
                               <Eye className="h-4 w-4" />

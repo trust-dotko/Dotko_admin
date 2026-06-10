@@ -41,12 +41,12 @@ export default function InputModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
         onClick={handleClose}
       ></div>
 
       {/* Modal */}
-      <div className="relative mx-4 w-full max-w-md animate-in zoom-in rounded-2xl border border-slate-200/90 bg-white/95 p-6 shadow-2xl duration-200">
+      <div className="relative mx-4 w-full max-w-md animate-in zoom-in-95 rounded-2xl border border-slate-200 bg-white p-6 shadow-card duration-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-slate-900">
@@ -105,7 +105,7 @@ export default function InputModal({
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-medium text-white transition-colors hover:bg-slate-800"
+            className="flex-1 rounded-xl bg-brand-800 px-4 py-3 font-medium text-white transition-all hover:bg-brand-700 shadow-sm shadow-brand-200"
           >
             Confirm
           </button>

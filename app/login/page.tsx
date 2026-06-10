@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Lock, Mail, Eye, EyeOff, Shield } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -38,40 +39,44 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 relative overflow-hidden p-4">
+      {/* Background blobs for aesthetics */}
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand-200/40 rounded-full blur-3xl" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-300/30 rounded-full blur-3xl" />
+
+      <div className="w-full max-w-md animate-in relative z-10">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-xl bg-slate-900">
-            <Shield className="h-10 w-10 text-white" />
+          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-3 border border-brand-100 shadow-card">
+            <Logo className="h-10 w-10" />
           </div>
-          <h1 className="mb-2 text-3xl font-semibold tracking-tight text-slate-900">DOTKO Admin</h1>
-          <p className="text-slate-600">Sign in to access the admin dashboard</p>
+          <h1 className="mb-1 text-3xl font-bold tracking-tight text-slate-900">dotko.in</h1>
+          <p className="text-slate-500 font-medium text-sm">MSME Trust Intelligence &bull; Admin Portal</p>
         </div>
 
         {/* Login Form */}
-        <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-brand-100/80 bg-white p-8 shadow-card">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                 {error}
               </div>
             )}
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="admin-input pl-10 pr-4"
+                  className="admin-input pl-10 pr-4 text-sm"
                   placeholder="admin@dotko.in"
                   required
                   disabled={loading}
@@ -81,17 +86,17 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="admin-input pl-10 pr-12"
+                  className="admin-input pl-10 pr-12 text-sm"
                   placeholder="Enter your password"
                   required
                   disabled={loading}
@@ -99,9 +104,9 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -110,7 +115,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-slate-900 py-3 font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl bg-brand-800 py-3 font-medium text-white transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm shadow-brand-200"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -127,16 +132,16 @@ export default function LoginPage() {
           </form>
 
           {/* Additional Info */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-center text-sm text-gray-600">
+          <div className="mt-6 pt-6 border-t border-slate-100">
+            <p className="text-center text-xs text-slate-500 font-medium">
               Admin access only. Contact your system administrator for credentials.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <p className="mt-8 text-center text-sm text-slate-500">
-          &copy; 2025 DOTKO.IN. All rights reserved.
+        <p className="mt-8 text-center text-xs text-slate-400 font-medium">
+          &copy; 2026 dotko.in. All rights reserved.
         </p>
       </div>
     </div>

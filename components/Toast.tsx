@@ -31,27 +31,27 @@ export default function Toast({
     switch (type) {
       case 'success':
         return {
-          bg: 'bg-green-50 border-green-500',
-          icon: <CheckCircle className="w-5 h-5 text-green-600" />,
+          bg: 'bg-green-50/90 backdrop-blur border-green-200',
+          icon: <CheckCircle className="w-5 h-5 text-green-600 animate-in zoom-in-50" />,
           text: 'text-green-800'
         };
       case 'error':
         return {
-          bg: 'bg-red-50 border-red-500',
-          icon: <XCircle className="w-5 h-5 text-red-600" />,
+          bg: 'bg-red-50/90 backdrop-blur border-red-200',
+          icon: <XCircle className="w-5 h-5 text-red-600 animate-in zoom-in-50" />,
           text: 'text-red-800'
         };
       case 'warning':
         return {
-          bg: 'bg-orange-50 border-orange-500',
-          icon: <AlertTriangle className="w-5 h-5 text-orange-600" />,
+          bg: 'bg-orange-50/90 backdrop-blur border-orange-200',
+          icon: <AlertTriangle className="w-5 h-5 text-orange-600 animate-in zoom-in-50" />,
           text: 'text-orange-800'
         };
       case 'info':
         return {
-          bg: 'bg-blue-50 border-blue-500',
-          icon: <Info className="w-5 h-5 text-blue-600" />,
-          text: 'text-blue-800'
+          bg: 'bg-brand-50/90 backdrop-blur border-brand-200',
+          icon: <Info className="w-5 h-5 text-brand-700 animate-in zoom-in-50" />,
+          text: 'text-brand-800'
         };
     }
   };
@@ -59,15 +59,15 @@ export default function Toast({
   const styles = getStyles();
 
   return (
-    <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
-      <div className={`${styles.bg} flex min-w-[320px] max-w-md items-center gap-3 rounded-xl border border-slate-200 p-4 shadow-xl`}>
+    <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-4 sm:slide-in-from-right-4 duration-300">
+      <div className={`${styles.bg} flex min-w-[320px] max-w-md items-center gap-3 rounded-2xl border p-4 shadow-card`}>
         {styles.icon}
-        <p className={`flex-1 font-medium ${styles.text}`}>
+        <p className={`flex-1 font-medium text-sm ${styles.text}`}>
           {message}
         </p>
         <button
           onClick={onClose}
-          className={`${styles.text} hover:opacity-70 transition-opacity`}
+          className={`${styles.text} hover:opacity-70 transition-opacity p-0.5 rounded-lg`}
         >
           <X className="w-4 h-4" />
         </button>

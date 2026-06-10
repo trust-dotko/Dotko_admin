@@ -204,7 +204,7 @@ export default function AdminDashboard() {
       <ProtectedRoute>
         <div className="admin-page flex items-center justify-center">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-slate-700"></div>
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-brand-800"></div>
             <p className="mt-4 text-slate-600">Loading dashboard...</p>
           </div>
         </div>
@@ -218,13 +218,13 @@ export default function AdminDashboard() {
         <Navbar />
 
         <header className="admin-header">
-          <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 relative z-10">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-semibold text-slate-900">Dashboard</h1>
-                <p className="mt-1 text-slate-600">Operational and website funnel overview</p>
+                <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+                <p className="mt-1 text-brand-200">Operational and website funnel overview</p>
               </div>
-              <span className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
+              <span className="rounded-lg border border-brand-700/60 bg-brand-900/40 px-4 py-2 text-sm text-brand-100 font-medium">
                 {new Date().toLocaleDateString('en-IN', {
                   weekday: 'long',
                   year: 'numeric',
@@ -321,10 +321,10 @@ export default function AdminDashboard() {
           </section>
 
           <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <QuickLink href="/users" title="Users" description="Verification, suspension, profile details" icon={<Users className="h-5 w-5 text-blue-600" />} />
-            <QuickLink href="/reports" title="Reports" description="Status workflow and issue tracking" icon={<FileText className="h-5 w-5 text-violet-600" />} />
-            <QuickLink href="/notifications" title="Notifications" description="System alerts and recipient logs" icon={<Bell className="h-5 w-5 text-emerald-600" />} />
-            <QuickLink href="/leads" title="Website Leads" description="Landing signup funnel and contact list" icon={<UserPlus className="h-5 w-5 text-indigo-600" />} />
+            <QuickLink href="/users" title="Users" description="Verification, suspension, profile details" icon={<Users className="h-5 w-5 text-brand-800" />} iconBg="bg-brand-50 border border-brand-100" />
+            <QuickLink href="/reports" title="Reports" description="Status workflow and issue tracking" icon={<FileText className="h-5 w-5 text-violet-700" />} iconBg="bg-violet-50 border border-violet-100" />
+            <QuickLink href="/notifications" title="Notifications" description="System alerts and recipient logs" icon={<Bell className="h-5 w-5 text-emerald-700" />} iconBg="bg-emerald-50 border border-emerald-100" />
+            <QuickLink href="/leads" title="Website Leads" description="Landing signup funnel and contact list" icon={<UserPlus className="h-5 w-5 text-indigo-700" />} iconBg="bg-indigo-50 border border-indigo-100" />
           </section>
 
           <section className="admin-panel p-6">
@@ -337,20 +337,20 @@ export default function AdminDashboard() {
                 <p className="py-6 text-center text-sm text-slate-500">No recent activity</p>
               ) : (
                 recentActivity.map((activity, index) => (
-                  <div key={activity.id + index} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                    <div className={`rounded-lg p-2 ${
+                  <div key={activity.id + index} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3 hover:bg-slate-50 transition-colors">
+                    <div className={`rounded-lg p-2 border ${
                       activity.type === 'user'
-                        ? 'bg-blue-100'
+                        ? 'bg-brand-50 border-brand-100 text-brand-800'
                         : activity.type === 'report'
-                        ? 'bg-violet-100'
+                        ? 'bg-violet-50 border-violet-100 text-violet-700'
                         : activity.type === 'lead'
-                        ? 'bg-indigo-100'
-                        : 'bg-emerald-100'
+                        ? 'bg-indigo-50 border-indigo-100 text-indigo-700'
+                        : 'bg-emerald-50 border-emerald-100 text-emerald-700'
                     }`}>
-                      {activity.type === 'user' && <Users className="h-4 w-4 text-blue-700" />}
-                      {activity.type === 'report' && <FileText className="h-4 w-4 text-violet-700" />}
-                      {activity.type === 'lead' && <UserPlus className="h-4 w-4 text-indigo-700" />}
-                      {activity.type === 'notification' && <Bell className="h-4 w-4 text-emerald-700" />}
+                      {activity.type === 'user' && <Users className="h-4 w-4" />}
+                      {activity.type === 'report' && <FileText className="h-4 w-4" />}
+                      {activity.type === 'lead' && <UserPlus className="h-4 w-4" />}
+                      {activity.type === 'notification' && <Bell className="h-4 w-4" />}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900">{activity.message}</p>
@@ -367,13 +367,13 @@ export default function AdminDashboard() {
   );
 }
 
-function QuickLink({ href, title, description, icon }: { href: string; title: string; description: string; icon: React.ReactNode }) {
+function QuickLink({ href, title, description, icon, iconBg }: { href: string; title: string; description: string; icon: React.ReactNode; iconBg: string }) {
   return (
     <Link href={href}>
       <div className="admin-panel h-full p-5 transition-colors hover:bg-slate-50">
-        <div className="mb-3 inline-flex rounded-lg bg-slate-100 p-2">{icon}</div>
+        <div className={`mb-3 inline-flex rounded-lg p-2 ${iconBg}`}>{icon}</div>
         <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
-        <p className="mt-1 text-xs text-slate-600">{description}</p>
+        <p className="mt-1 text-xs text-slate-650">{description}</p>
       </div>
     </Link>
   );
@@ -381,10 +381,10 @@ function QuickLink({ href, title, description, icon }: { href: string; title: st
 
 function CompactStat({ title, value, link }: { title: string; value: number; link: string }) {
   return (
-    <Link href={link}>
-      <div className="h-full min-h-[108px] rounded-lg border border-slate-200 bg-white px-3 py-3 text-center transition-colors hover:bg-slate-50">
-        <p className="line-clamp-2 text-[11px] font-medium uppercase tracking-wide text-slate-500">{title}</p>
-        <p className="mt-3 text-2xl font-semibold leading-none text-slate-900">{value}</p>
+    <Link href={link} className="block h-full">
+      <div className="admin-metric">
+        <p className="admin-metric-label line-clamp-2">{title}</p>
+        <p className="admin-metric-value">{value}</p>
       </div>
     </Link>
   );

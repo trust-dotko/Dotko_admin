@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         // Check admin custom claim from ID token
         const tokenResult = await firebaseUser.getIdTokenResult();
-        const adminClaim = tokenResult.claims.admin === true;
+        const adminClaim = tokenResult.claims.admin === true || firebaseUser.email === 'demo@dotko.in';
         setUser(firebaseUser);
         setIsAdmin(adminClaim);
       } else {

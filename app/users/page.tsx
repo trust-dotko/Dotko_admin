@@ -240,12 +240,11 @@ export default function UsersPage() {
       <div className="admin-page">
         <Navbar />
 
-      {/* Page Header */}
       <header className="admin-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">User Management</h1>
-            <p className="mt-1 text-slate-600">View and manage all registered users</p>
+            <h1 className="text-3xl font-bold tracking-tight text-white">User Management</h1>
+            <p className="mt-1 text-brand-200">View and manage all registered users</p>
           </div>
         </div>
       </header>
@@ -291,7 +290,7 @@ export default function UsersPage() {
         <div className="admin-panel overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-sky-600"></div>
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-brand-800"></div>
               <p className="mt-4 text-slate-600">Loading users...</p>
             </div>
           ) : filteredUsers.length === 0 ? (
@@ -302,40 +301,40 @@ export default function UsersPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="border-b border-slate-200 bg-slate-50/80">
+                <thead className="border-b border-brand-100 bg-brand-50/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Business Name
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Contact
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       GST/PAN
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Trust Score
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Joined
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-200">
                   {filteredUsers.map((user) => (
-                    <tr key={user.id} className={`hover:bg-gray-50 transition-colors ${user.suspended ? 'bg-red-50' : ''}`}>
+                    <tr key={user.id} className={`hover:bg-slate-50/80 transition-colors ${user.suspended ? 'bg-red-50/40' : ''}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center">
-                          <Building2 className="w-5 h-5 text-gray-400 mr-3" />
+                          <Building2 className="w-5 h-5 text-slate-400 mr-3" />
                           <div>
                             <div className="flex items-center gap-2">
-                              <p className="font-medium text-gray-900">{user.businessName || 'N/A'}</p>
+                              <p className="font-medium text-slate-900">{user.businessName || 'N/A'}</p>
                               {user.verified && (
                                 <Shield className="w-4 h-4 text-green-500" />
                               )}
@@ -343,74 +342,74 @@ export default function UsersPage() {
                                 <XCircle className="w-4 h-4 text-red-500" />
                               )}
                             </div>
-                            <p className="text-sm text-gray-500">{user.entityType || 'Not specified'}</p>
+                            <p className="text-sm text-slate-500">{user.entityType || 'Not specified'}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Mail className="w-4 h-4 mr-2 text-gray-400" />
+                          <div className="flex items-center text-sm text-slate-600">
+                            <Mail className="w-4 h-4 mr-2 text-slate-400" />
                             {user.email}
                           </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Phone className="w-4 h-4 mr-2 text-gray-400" />
+                          <div className="flex items-center text-sm text-slate-600">
+                            <Phone className="w-4 h-4 mr-2 text-slate-400" />
                             {user.mobileNumber || 'N/A'}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1 text-sm">
-                          <p className="text-gray-900 font-mono">{user.gst || 'N/A'}</p>
-                          <p className="text-gray-600 font-mono">{user.pan || 'N/A'}</p>
+                          <p className="text-slate-900 font-mono">{user.gst || 'N/A'}</p>
+                          <p className="text-slate-600 font-mono">{user.pan || 'N/A'}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         {user.trustScore !== undefined && user.trustScore !== null ? (
                           <div className="flex items-center gap-2">
                             <div className={`flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold text-sm ${
-                              user.trustScore >= 80 ? 'bg-green-100 text-green-700' :
-                              user.trustScore >= 60 ? 'bg-blue-100 text-blue-700' :
-                              user.trustScore >= 40 ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-red-100 text-red-700'
+                              user.trustScore >= 80 ? 'bg-green-50 text-green-700 border border-green-150' :
+                              user.trustScore >= 60 ? 'bg-brand-50 text-brand-800 border border-brand-100' :
+                              user.trustScore >= 40 ? 'bg-yellow-50 text-yellow-750 border border-yellow-150' :
+                              'bg-red-50 text-red-700 border border-red-150'
                             }`}>
                               <Star className="w-4 h-4" fill="currentColor" />
                               <span>{user.trustScore}</span>
                             </div>
                           </div>
                         ) : (
-                          <span className="text-sm text-gray-400">N/A</span>
+                          <span className="text-sm text-slate-400">N/A</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                             user.onboardingCompleted
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-orange-100 text-orange-800'
+                              ? 'bg-green-50 text-green-700 border border-green-100'
+                              : 'bg-orange-50 text-orange-700 border border-orange-100'
                           }`}>
                             {user.onboardingCompleted ? 'Active' : 'Pending'}
                           </span>
                           {user.verified && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-800 border border-brand-100">
                               Verified
                             </span>
                           )}
                           {user.suspended && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100">
                               Suspended
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-6 py-4 text-sm text-slate-600">
                         {formatDate(user.createdAt)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => setDetailModal({ isOpen: true, user })}
-                            className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-colors"
+                            className="p-2 bg-brand-50 hover:bg-brand-100 text-brand-800 rounded-lg transition-colors"
                             title="View Full Details"
                           >
                             <Eye className="w-4 h-4" />
@@ -419,8 +418,8 @@ export default function UsersPage() {
                             onClick={() => handleVerifyUser(user.id, user.verified || false)}
                             className={`p-2 rounded-lg transition-colors ${
                               user.verified
-                                ? 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                                : 'bg-green-100 hover:bg-green-200 text-green-600'
+                                ? 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
                             }`}
                             title={user.verified ? 'Unverify User' : 'Verify User'}
                           >
@@ -430,8 +429,8 @@ export default function UsersPage() {
                             onClick={() => handleSuspendUser(user.id, user.suspended || false)}
                             className={`p-2 rounded-lg transition-colors ${
                               user.suspended
-                                ? 'bg-green-100 hover:bg-green-200 text-green-600'
-                                : 'bg-orange-100 hover:bg-orange-200 text-orange-600'
+                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
+                                : 'bg-amber-50 hover:bg-amber-100 text-amber-700'
                             }`}
                             title={user.suspended ? 'Unsuspend User' : 'Suspend User'}
                           >
@@ -439,7 +438,7 @@ export default function UsersPage() {
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id, user.businessName)}
-                            className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors"
+                            className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition-colors"
                             title="Delete User"
                           >
                             <Trash2 className="w-4 h-4" />

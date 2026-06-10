@@ -86,13 +86,13 @@ export default function NotificationsPage() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'report_filed':
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
+        return <AlertCircle className="w-5 h-5 text-red-600" />;
       case 'report_update':
-        return <Info className="w-5 h-5 text-blue-500" />;
+        return <Info className="w-5 h-5 text-brand-800" />;
       case 'report_resolved':
-        return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
       default:
-        return <Bell className="w-5 h-5 text-gray-500" />;
+        return <Bell className="w-5 h-5 text-slate-500" />;
     }
   };
 
@@ -107,12 +107,11 @@ export default function NotificationsPage() {
       <div className="admin-page">
         <Navbar />
 
-      {/* Page Header */}
       <header className="admin-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Notifications</h1>
-            <p className="mt-1 text-slate-600">View all system notifications</p>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Notifications</h1>
+            <p className="mt-1 text-brand-200">View all system notifications</p>
           </div>
         </div>
       </header>
@@ -166,7 +165,7 @@ export default function NotificationsPage() {
         <div className="admin-panel">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-sky-600"></div>
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-brand-800"></div>
               <p className="mt-4 text-slate-600">Loading notifications...</p>
             </div>
           ) : filteredNotifications.length === 0 ? (
@@ -179,16 +178,16 @@ export default function NotificationsPage() {
               {filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-6 transition-colors hover:bg-slate-50 ${
-                    !notification.read ? 'bg-sky-50/70' : ''
+                  className={`p-6 transition-colors hover:bg-slate-50/80 ${
+                    !notification.read ? 'bg-brand-50/40 border-l-4 border-brand-800' : ''
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-full ${
-                      notification.type === 'report_filed' ? 'bg-red-100' :
-                      notification.type === 'report_update' ? 'bg-blue-100' :
-                      notification.type === 'report_resolved' ? 'bg-green-100' :
-                      'bg-slate-100'
+                    <div className={`p-3 rounded-full border ${
+                      notification.type === 'report_filed' ? 'bg-red-50 border-red-100' :
+                      notification.type === 'report_update' ? 'bg-brand-50 border-brand-100' :
+                      notification.type === 'report_resolved' ? 'bg-green-50 border-green-100' :
+                      'bg-slate-50 border-slate-250'
                     }`}>
                       {getNotificationIcon(notification.type)}
                     </div>
@@ -197,13 +196,13 @@ export default function NotificationsPage() {
                         <h3 className="font-semibold text-slate-900">{notification.title}</h3>
                         <div className="flex items-center gap-2">
                           {!notification.read && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-800 border border-brand-100 animate-pulse">
                               New
                             </span>
                           )}
                           <button
                             onClick={() => setDetailModal({ isOpen: true, notification })}
-                            className="p-2 bg-green-100 hover:bg-green-200 text-green-600 rounded-lg transition-colors"
+                            className="p-2 bg-brand-50 hover:bg-brand-100 text-brand-800 rounded-lg border border-brand-100 transition-colors"
                             title="View Full Details"
                           >
                             <Eye className="w-4 h-4" />

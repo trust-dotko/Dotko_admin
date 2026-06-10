@@ -327,17 +327,17 @@ DOTKO.IN Team`;
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-50 text-orange-700 border border-orange-100';
       case 'under_discussion':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-brand-50 text-brand-800 border border-brand-100';
       case 'resolved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-50 text-green-700 border border-green-100';
       case 'published':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-50 text-red-750 border border-red-100';
       case 'rejected':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-50 text-slate-700 border border-slate-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-50 text-slate-700 border border-slate-200';
     }
   };
 
@@ -367,12 +367,11 @@ DOTKO.IN Team`;
       <div className="admin-page">
         <Navbar />
 
-      {/* Page Header */}
       <header className="admin-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Reports Management</h1>
-            <p className="mt-1 text-slate-600">Monitor and manage all filed reports</p>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Reports Management</h1>
+            <p className="mt-1 text-brand-200">Monitor and manage all filed reports</p>
           </div>
         </div>
       </header>
@@ -432,7 +431,7 @@ DOTKO.IN Team`;
         <div className="admin-panel overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-sky-600"></div>
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-4 border-t-4 border-brand-800"></div>
               <p className="mt-4 text-slate-600">Loading reports...</p>
             </div>
           ) : filteredReports.length === 0 ? (
@@ -443,51 +442,51 @@ DOTKO.IN Team`;
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="border-b border-slate-200 bg-slate-50/80">
+                <thead className="border-b border-brand-100 bg-brand-50/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Complainant
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Against
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Invoice
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Filed Date
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-200">
                   {filteredReports.map((report) => (
-                    <tr key={report.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={report.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <p className="font-medium text-gray-900">{report.customerName}</p>
-                          <p className="text-sm text-gray-500 font-mono">{report.customerGSTIN || 'No GST'}</p>
+                          <p className="font-medium text-slate-900">{report.customerName}</p>
+                          <p className="text-sm text-slate-500 font-mono">{report.customerGSTIN || 'No GST'}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm text-gray-900">{report.supplierBusinessName || 'N/A'}</p>
+                        <p className="text-sm text-slate-900">{report.supplierBusinessName || 'N/A'}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-slate-900">
                           ₹{report.amount?.toLocaleString('en-IN')}
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm text-gray-900 font-mono">{report.invoiceNumber}</p>
-                        <p className="text-xs text-gray-500">{report.typeOfComplaint || 'Payment Issue'}</p>
+                        <p className="text-sm text-slate-900 font-mono">{report.invoiceNumber}</p>
+                        <p className="text-xs text-slate-500">{report.typeOfComplaint || 'Payment Issue'}</p>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
@@ -495,31 +494,31 @@ DOTKO.IN Team`;
                           {report.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-6 py-4 text-sm text-slate-600">
                         {formatDate(report.createdAt)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => setDetailModal({ isOpen: true, report })}
-                            className="p-2 bg-purple-100 hover:bg-purple-200 text-purple-600 rounded-lg transition-colors"
+                            className="p-2 bg-brand-50 hover:bg-brand-100 text-brand-800 rounded-lg border border-brand-100 transition-colors"
                             title="View Full Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleViewChats(report)}
-                            className="p-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-lg transition-colors"
+                            className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg border border-indigo-100 transition-colors"
                             title="View Chat History"
                           >
                             <MessagesSquare className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleSendWhatsApp(report)}
-                            className={`p-2 rounded-lg transition-colors ${
+                            className={`p-2 rounded-lg border transition-colors ${
                               report.whatsappMessageSent
-                                ? 'bg-green-100 hover:bg-green-200 text-green-600'
-                                : 'bg-red-100 hover:bg-red-200 text-red-600'
+                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-100'
+                                : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-100'
                             }`}
                             title={report.whatsappMessageSent ? 'WhatsApp sent - Click to resend' : 'Send WhatsApp message'}
                           >
@@ -527,14 +526,14 @@ DOTKO.IN Team`;
                           </button>
                           <button
                             onClick={() => handleUpdateStatus(report.id, report.status)}
-                            className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-lg transition-colors"
+                            className="p-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg border border-amber-100 transition-colors"
                             title="Update Status"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteReport(report.id, report.customerName)}
-                            className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors"
+                            className="p-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-100 transition-colors"
                             title="Delete Report"
                           >
                             <Trash2 className="w-4 h-4" />
